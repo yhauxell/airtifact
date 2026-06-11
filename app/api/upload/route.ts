@@ -1,7 +1,6 @@
 import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
-import { extract } from 'unzipper';
-import { Readable } from 'stream';
+import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
 
 // Generate a cryptographically secure random project ID
@@ -28,53 +27,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert File to Buffer
+    // Convert File to Buffer and extract ZIP
     const buffer = Buffer.from(await file.arrayBuffer());
     const projectId = generateProjectId();
-    
+    const jszip = new JSZip();
+    const zip = await jszip.loadAsync(buffer);
+
     const uploadedFiles: string[] = [];
     let hasIndexHtml = false;
 
     // Extract and upload files
-    await new Promise<void>((resolve, reject) => {
-      Readable.from([buffer])
-        .pipe(extract({ path: '' }))
-        .on('entry', async (entry) => {
-          try {
-            const fileName = entry.path;
-            
-            // Skip directories
-            if (entry.type === 'Directory') {
-              entry.autodrain();
-              return;
-            }
+    for (const [filePath, file] of Object.entries(zip.files)) {
+      // Skip directories
+      if (file.dir) continue;
 
-            // Track index.html
-            if (fileName.toLowerCase().endsWith('index.html')) {
-              hasIndexHtml = true;
-            }
+      // Track index.html
+      if (filePath.toLowerCase().endsWith('index.html')) {
+        hasIndexHtml = true;
+      }
 
-            // Convert stream to buffer
-            const chunks: Buffer[] = [];
-            for await (const chunk of entry) {
-              chunks.push(chunk as Buffer);
-            }
-            const fileBuffer = Buffer.concat(chunks);
+      // Get file buffer
+      const fileBuffer = await file.async('arraybuffer');
+      const buffer_obj = Buffer.from(fileBuffer);
 
-            // Upload to Vercel Blob
-            const blobPath = `projects/${projectId}/${fileName}`;
-            await put(blobPath, fileBuffer, {
-              access: 'private',
-            });
+      // Upload to Vercel Blob
+      const blobPath = `projects/${projectId}/${filePath}`;
+      await put(blobPath, buffer_obj, {
+        access: 'private',
+      });
 
-            uploadedFiles.push(fileName);
-          } catch (error) {
-            reject(error);
-          }
-        })
-        .on('error', reject)
-        .on('finish', resolve);
-    });
+      uploadedFiles.push(filePath);
+    }
 
     if (!hasIndexHtml) {
       return NextResponse.json(
