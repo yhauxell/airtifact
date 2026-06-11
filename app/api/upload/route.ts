@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       // Upload to Vercel Blob
       const blobPath = `projects/${projectId}/${filePath}`;
       await put(blobPath, buffer_obj, {
-        access: 'private',
+        access: 'public',
       });
 
       uploadedFiles.push(filePath);
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     await put(
       `projects/${projectId}/metadata.json`,
       JSON.stringify(metadata),
-      { access: 'private' }
+      { access: 'public' }
     );
 
     return NextResponse.json({
