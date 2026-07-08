@@ -3,6 +3,9 @@
 import { useState, useRef } from 'react';
 import { Upload, Check, Copy, AlertCircle, Loader } from 'lucide-react';
 
+const MAX_UPLOAD_SIZE_MB = 5;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+
 interface UploadResponse {
   projectId: string;
   shareUrl: string;
@@ -51,8 +54,8 @@ export default function Page() {
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) {
-      setError('File size must be less than 100MB');
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      setError(`File size must be less than ${MAX_UPLOAD_SIZE_MB}MB`);
       return;
     }
 
@@ -174,7 +177,7 @@ export default function Page() {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary">•</span>
-                  <span>Maximum file size: 100MB</span>
+                  <span>Maximum file size: {MAX_UPLOAD_SIZE_MB}MB</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary">•</span>

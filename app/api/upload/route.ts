@@ -3,9 +3,40 @@ import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
 
+const MAX_UPLOAD_SIZE_MB = 5;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+const BLOCKED_DIRECTORY_NAMES = new Set(['__macosx', '__macos']);
+
 // Generate a cryptographically secure random project ID
 function generateProjectId(): string {
   return randomBytes(16).toString('hex');
+}
+
+function normalizeZipPath(filePath: string): string | null {
+  const normalizedPath = filePath
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
+    .replace(/\/+/g, '/');
+
+  if (!normalizedPath) {
+    return null;
+  }
+
+  const segments = normalizedPath.split('/');
+  if (segments.some((segment) => segment === '.' || segment === '..')) {
+    return null;
+  }
+
+  return normalizedPath;
+}
+
+function shouldSkipNormalizedZipPath(normalizedPath: string): boolean {
+  const segments = normalizedPath.split('/').filter(Boolean);
+
+  return segments.some((segment) => {
+    const lowerCaseSegment = segment.toLowerCase();
+    return lowerCaseSegment.startsWith('.') || BLOCKED_DIRECTORY_NAMES.has(lowerCaseSegment);
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -27,6 +58,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: `File size must be less than ${MAX_UPLOAD_SIZE_MB}MB` },
+        { status: 400 }
+      );
+    }
+
     // Convert File to Buffer and extract ZIP
     const buffer = Buffer.from(await file.arrayBuffer());
     const projectId = generateProjectId();
@@ -38,11 +76,17 @@ export async function POST(request: NextRequest) {
 
     // Extract and upload files
     for (const [filePath, file] of Object.entries(zip.files)) {
+      const normalizedPath = normalizeZipPath(filePath);
+
+      if (!normalizedPath || shouldSkipNormalizedZipPath(normalizedPath)) {
+        continue;
+      }
+
       // Skip directories
       if (file.dir) continue;
 
       // Track index.html
-      if (filePath.toLowerCase().endsWith('index.html')) {
+      if (normalizedPath.toLowerCase().endsWith('index.html')) {
         hasIndexHtml = true;
       }
 
@@ -51,12 +95,12 @@ export async function POST(request: NextRequest) {
       const buffer_obj = Buffer.from(fileBuffer);
 
       // Upload to Vercel Blob
-      const blobPath = `projects/${projectId}/${filePath}`;
+      const blobPath = `projects/${projectId}/${normalizedPath}`;
       await put(blobPath, buffer_obj, {
         access: 'public',
       });
 
-      uploadedFiles.push(filePath);
+      uploadedFiles.push(normalizedPath);
     }
 
     if (!hasIndexHtml) {
