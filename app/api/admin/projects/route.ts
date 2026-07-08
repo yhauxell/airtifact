@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const providedPassword = request.headers.get('x-manage-password');
+    const providedPassword =
+      request.headers.get('x-manage-password') ??
+      request.cookies.get('admin_session')?.value;
     if (!providedPassword || providedPassword !== process.env.MANAGE_PASSWORD) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

@@ -4,24 +4,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { format } from 'date-fns';
 import { Trash2, Copy } from 'lucide-react';
 
-const SESSION_COOKIE = 'admin_session';
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 1 week in seconds
-
-function setSessionCookie(value: string) {
-  document.cookie = `${SESSION_COOKIE}=${encodeURIComponent(value)}; max-age=${SESSION_MAX_AGE}; path=/; SameSite=Strict`;
-}
-
-function getSessionCookie(): string | null {
-  const match = document.cookie.match(
-    new RegExp(`(?:^|; )${SESSION_COOKIE}=([^;]*)`)
-  );
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-function clearSessionCookie() {
-  document.cookie = `${SESSION_COOKIE}=; max-age=0; path=/; SameSite=Strict`;
-}
-
 interface ProjectMetadata {
   projectId: string;
   uploadDate: string;
@@ -35,7 +17,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
   const [password, setPassword] = useState('');
-  const [managePassword, setManagePassword] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
@@ -43,26 +25,21 @@ export default function AdminPage() {
   const [confirmations, setConfirmations] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const saved = getSessionCookie();
-    if (saved) {
-      setManagePassword(saved);
-    }
+    fetch('/api/admin/auth').then((res) => {
+      if (res.ok) setIsAuthenticated(true);
+    });
   }, []);
 
   useEffect(() => {
-    if (managePassword) {
-      fetchProjects(managePassword);
+    if (isAuthenticated) {
+      fetchProjects();
     }
-  }, [managePassword]);
+  }, [isAuthenticated]);
 
-  const fetchProjects = async (passwordValue: string) => {
+  const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/projects', {
-        headers: {
-          'x-manage-password': passwordValue,
-        },
-      });
+      const response = await fetch('/api/admin/projects');
       if (!response.ok) throw new Error('Failed to fetch projects');
       const data = await response.json();
       setProjects(data.projects || []);
@@ -97,8 +74,7 @@ export default function AdminPage() {
         throw new Error(data?.error || 'Invalid password');
       }
 
-      setManagePassword(password);
-      setSessionCookie(password);
+      setIsAuthenticated(true);
       setAuthError(null);
       setError(null);
     } catch (err) {
@@ -109,7 +85,7 @@ export default function AdminPage() {
   };
 
   const handleDelete = async (projectId: string) => {
-    if (!managePassword) {
+    if (!isAuthenticated) {
       return;
     }
 
@@ -122,9 +98,6 @@ export default function AdminPage() {
       setDeletingProjectId(projectId);
       const response = await fetch(`/api/admin/projects/${projectId}`, {
         method: 'DELETE',
-        headers: {
-          'x-manage-password': managePassword,
-        },
       });
 
       if (!response.ok) {
@@ -137,12 +110,22 @@ export default function AdminPage() {
         delete next[projectId];
         return next;
       });
-      await fetchProjects(managePassword);
+      await fetchProjects();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to remove project');
     } finally {
       setDeletingProjectId(null);
     }
+  };
+
+  const handleLock = async () => {
+    await fetch('/api/admin/auth', { method: 'DELETE' });
+    setIsAuthenticated(false);
+    setPassword('');
+    setProjects([]);
+    setAuthError(null);
+    setError(null);
+    setConfirmations({});
   };
 
   const copyToClipboard = (projectId: string) => {
@@ -152,7 +135,7 @@ export default function AdminPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  if (!managePassword) {
+  if (!isAuthenticated) {
     return (
       <main className="min-h-screen bg-background p-8">
         <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-6">
@@ -197,7 +180,7 @@ export default function AdminPage() {
       <div className="mx-auto max-w-4xl">
         <div className="mb-8 flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">
+            <h1 className="mb-2 text-4xl font-bold text-foreground">
               Project Dashboard
             </h1>
             <p className="text-muted-foreground">
@@ -205,15 +188,7 @@ export default function AdminPage() {
             </p>
           </div>
           <button
-            onClick={() => {
-              clearSessionCookie();
-              setManagePassword(null);
-              setPassword('');
-              setProjects([]);
-              setAuthError(null);
-              setError(null);
-              setConfirmations({});
-            }}
+            onClick={handleLock}
             className="rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground hover:bg-accent"
           >
             Lock Dashboard
