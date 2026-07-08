@@ -13,9 +13,12 @@ function generateProjectId(): string {
 }
 
 function normalizeZipPath(filePath: string): string | null {
-  const normalizedPath = filePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  const normalizedPath = filePath
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
+    .replace(/\/+/g, '/');
 
-  if (!normalizedPath || normalizedPath.includes('//')) {
+  if (!normalizedPath) {
     return null;
   }
 
