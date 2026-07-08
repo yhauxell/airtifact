@@ -23,7 +23,7 @@ function normalizeZipPath(filePath: string): string | null {
   }
 
   const segments = normalizedPath.split('/');
-  if (segments.some((segment) => segment === '' || segment === '.' || segment === '..')) {
+  if (segments.some((segment) => segment === '.' || segment === '..')) {
     return null;
   }
 
