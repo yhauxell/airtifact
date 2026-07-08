@@ -6,7 +6,8 @@ const SESSION_COOKIE = 'admin_session';
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 1 week in seconds
 
 export async function GET(request: NextRequest) {
-  if (!process.env.MANAGE_PASSWORD) {
+  const managePassword = process.env.MANAGE_PASSWORD;
+  if (!managePassword) {
     return NextResponse.json(
       { error: 'Manage password is not configured' },
       { status: 500 }
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE);
-  if (!cookie || cookie.value !== createSessionToken(process.env.MANAGE_PASSWORD)) {
+  if (!cookie || cookie.value !== createSessionToken(managePassword)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -28,7 +29,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    if (!process.env.MANAGE_PASSWORD) {
+    const managePassword = process.env.MANAGE_PASSWORD;
+    if (!managePassword) {
       console.error('[v0] MANAGE_PASSWORD is not configured');
       return NextResponse.json(
         { error: 'Manage password is not configured' },
@@ -40,12 +42,12 @@ export async function POST(request: NextRequest) {
     const password =
       typeof body?.password === 'string' ? body.password : undefined;
 
-    if (!password || password !== process.env.MANAGE_PASSWORD) {
+    if (!password || password !== managePassword) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
     }
 
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(SESSION_COOKIE, createSessionToken(process.env.MANAGE_PASSWORD), {
+    response.cookies.set(SESSION_COOKIE, createSessionToken(managePassword), {
       httpOnly: true,
       sameSite: 'strict',
       maxAge: SESSION_MAX_AGE,
