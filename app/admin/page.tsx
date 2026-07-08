@@ -281,7 +281,7 @@ export default function AdminPage() {
                           [project.projectId]: event.target.value,
                         }))
                       }
-                      placeholder="Enter project id to confirm"
+                      placeholder="Enter project ID to confirm"
                       className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
                     />
                     <button
