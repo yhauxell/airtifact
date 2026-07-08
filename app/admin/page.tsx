@@ -4,6 +4,24 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { format } from 'date-fns';
 import { Trash2, Copy } from 'lucide-react';
 
+const SESSION_COOKIE = 'admin_session';
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 1 week in seconds
+
+function setSessionCookie(value: string) {
+  document.cookie = `${SESSION_COOKIE}=${encodeURIComponent(value)}; max-age=${SESSION_MAX_AGE}; path=/; SameSite=Strict`;
+}
+
+function getSessionCookie(): string | null {
+  const match = document.cookie.match(
+    new RegExp(`(?:^|; )${SESSION_COOKIE}=([^;]*)`)
+  );
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function clearSessionCookie() {
+  document.cookie = `${SESSION_COOKIE}=; max-age=0; path=/; SameSite=Strict`;
+}
+
 interface ProjectMetadata {
   projectId: string;
   uploadDate: string;
@@ -23,6 +41,13 @@ export default function AdminPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [deletingProjectId, setDeletingProjectId] = useState<string | null>(null);
   const [confirmations, setConfirmations] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const saved = getSessionCookie();
+    if (saved) {
+      setManagePassword(saved);
+    }
+  }, []);
 
   useEffect(() => {
     if (managePassword) {
@@ -73,6 +98,7 @@ export default function AdminPage() {
       }
 
       setManagePassword(password);
+      setSessionCookie(password);
       setAuthError(null);
       setError(null);
     } catch (err) {
@@ -180,6 +206,7 @@ export default function AdminPage() {
           </div>
           <button
             onClick={() => {
+              clearSessionCookie();
               setManagePassword(null);
               setPassword('');
               setProjects([]);
