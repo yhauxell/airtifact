@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkBotId } from 'botid/server';
+import { createSessionToken } from '@/lib/session';
 
 const SESSION_COOKIE = 'admin_session';
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 1 week in seconds
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   const cookie = request.cookies.get(SESSION_COOKIE);
-  if (!cookie || cookie.value !== process.env.MANAGE_PASSWORD) {
+  if (!cookie || cookie.value !== createSessionToken(process.env.MANAGE_PASSWORD)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(SESSION_COOKIE, process.env.MANAGE_PASSWORD, {
+    response.cookies.set(SESSION_COOKIE, createSessionToken(process.env.MANAGE_PASSWORD), {
       httpOnly: true,
       sameSite: 'strict',
       maxAge: SESSION_MAX_AGE,

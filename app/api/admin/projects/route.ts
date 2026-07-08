@@ -1,5 +1,6 @@
 import { list } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
+import { isValidAdminCredential } from '@/lib/session';
 
 interface ProjectMetadata {
   projectId: string;
@@ -19,10 +20,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const providedPassword =
-      request.headers.get('x-manage-password') ??
-      request.cookies.get('admin_session')?.value;
-    if (!providedPassword || providedPassword !== process.env.MANAGE_PASSWORD) {
+    const providedPassword = request.headers.get('x-manage-password');
+    const cookieValue = request.cookies.get('admin_session')?.value;
+    if (!isValidAdminCredential(providedPassword, cookieValue)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

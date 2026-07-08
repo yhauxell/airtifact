@@ -20,6 +20,13 @@ export async function GET(
       );
     }
 
+    if (!/^[a-f0-9]{32}$/.test(projectId)) {
+      return NextResponse.json(
+        { error: 'Invalid project ID' },
+        { status: 400 }
+      );
+    }
+
     // List blobs to check if project exists and file is accessible
     const { blobs } = await list({
       prefix: `projects/${projectId}/`,
