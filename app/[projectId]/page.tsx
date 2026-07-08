@@ -74,6 +74,7 @@ export default async function ProjectPage({
     <div className="relative">
       <Link
         href="/"
+        aria-label="Create your own static website upload"
         className="fixed right-3 top-3 z-20 rounded-full bg-black/75 px-3 py-1 text-xs font-medium text-white shadow-lg transition-opacity hover:opacity-90"
       >
         Built with Static Website Uploader · Create yours

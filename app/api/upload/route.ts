@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
 
 const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+const BLOCKED_DIRECTORY_NAMES = new Set(['__macosx', '__macos']);
 
 // Generate a cryptographically secure random project ID
 function generateProjectId(): string {
@@ -13,7 +14,7 @@ function generateProjectId(): string {
 function normalizeZipPath(filePath: string): string | null {
   const normalizedPath = filePath.replace(/\\/g, '/').replace(/^\/+/, '');
 
-  if (!normalizedPath) {
+  if (!normalizedPath || normalizedPath.includes('//')) {
     return null;
   }
 
@@ -26,12 +27,11 @@ function normalizeZipPath(filePath: string): string | null {
 }
 
 function shouldSkipZipPath(filePath: string): boolean {
-  const blockedDirectoryNames = new Set(['__macosx', '__macos']);
   const segments = filePath.split('/');
 
   return segments.some((segment) => {
     const lowerCaseSegment = segment.toLowerCase();
-    return lowerCaseSegment.startsWith('.') || blockedDirectoryNames.has(lowerCaseSegment);
+    return lowerCaseSegment.startsWith('.') || BLOCKED_DIRECTORY_NAMES.has(lowerCaseSegment);
   });
 }
 
