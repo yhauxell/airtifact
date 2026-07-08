@@ -30,8 +30,8 @@ function normalizeZipPath(filePath: string): string | null {
   return normalizedPath;
 }
 
-function shouldSkipZipPath(filePath: string): boolean {
-  const segments = filePath.split('/');
+function shouldSkipNormalizedZipPath(normalizedPath: string): boolean {
+  const segments = normalizedPath.split('/').filter(Boolean);
 
   return segments.some((segment) => {
     const lowerCaseSegment = segment.toLowerCase();
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     for (const [filePath, file] of Object.entries(zip.files)) {
       const normalizedPath = normalizeZipPath(filePath);
 
-      if (!normalizedPath || shouldSkipZipPath(normalizedPath)) {
+      if (!normalizedPath || shouldSkipNormalizedZipPath(normalizedPath)) {
         continue;
       }
 
