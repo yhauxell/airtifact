@@ -227,7 +227,7 @@ export default function AdminPage() {
 ## Limitations & Considerations
 
 ### File Size
-- Max file size: 100MB (enforced client-side)
+- Max file size: 5MB (enforced client-side and server-side)
 - Vercel Blob has generous limits for free tier
 - Adjust in `app/page.tsx` if needed
 
