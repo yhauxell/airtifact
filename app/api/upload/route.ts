@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
 
-const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_UPLOAD_SIZE_MB = 5;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 const BLOCKED_DIRECTORY_NAMES = new Set(['__macosx', '__macos']);
 
 // Generate a cryptographically secure random project ID
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     if (file.size > MAX_UPLOAD_SIZE_BYTES) {
       return NextResponse.json(
-        { error: 'File size must be less than 5MB' },
+        { error: `File size must be less than ${MAX_UPLOAD_SIZE_MB}MB` },
         { status: 400 }
       );
     }
