@@ -8,7 +8,7 @@ A super simple Next.js app that lets you upload ZIP files containing HTML sites 
 ✅ **Cryptographically secure private IDs** - Random 32-char hex IDs (impossible to guess)  
 ✅ **Vercel Blob storage** - Files stored as private blobs, served via authenticated API  
 ✅ **Shareable links** - Get instant URLs to share with anyone  
-✅ **Admin dashboard** - Secret `/4dm1n` route lists all projects  
+✅ **Admin dashboard** - Password-protected `/admin` route lists and removes projects  
 ✅ **Asset serving** - CSS, JS, images, fonts all properly served with correct MIME types  
 ✅ **iframe rendering** - Projects displayed in isolated iframe with proper base URL handling
 
@@ -58,7 +58,7 @@ Once deployed:
 - Visit your domain → Landing page with drag-and-drop upload
 - Click upload or drag a ZIP file → Get a shareable link
 - Visit the link → See your HTML rendered
-- Visit `/4dm1n` → Admin dashboard showing all projects
+- Visit `/admin` → Admin dashboard showing all projects
 
 ## Local Testing
 
@@ -122,14 +122,17 @@ Then upload via the UI at `http://localhost:3000`
 ```
 app/
 ├── page.tsx                              # Landing page with upload UI
-├── 4dm1n/
-│   └── page.tsx                          # Admin dashboard (lists all projects)
+├── admin/
+│   └── page.tsx                          # Password-protected admin dashboard
 ├── [projectId]/
 │   └── page.tsx                          # Project display (renders HTML)
 ├── api/
 │   ├── upload/route.ts                   # Handle ZIP uploads
 │   ├── admin/
-│   │   └── projects/route.ts             # List all projects (admin API)
+│   │   ├── auth/route.ts                 # Admin password verification
+│   │   └── projects/
+│   │       ├── route.ts                  # List all projects (admin API)
+│   │       └── [projectId]/route.ts      # Delete a project by ID
 │   └── projects/
 │       └── [projectId]/
 │           └── [...path]/route.ts        # Serve files from Blob
@@ -170,7 +173,7 @@ Fetch a file from a project
 **Example:** `/api/projects/a1b2c3d4e5f6/style.css` → CSS file with correct headers
 
 ### `GET /api/admin/projects`
-List all projects (called by `/4dm1n`)
+List all projects (called by `/admin`, requires `x-manage-password`)
 
 **Response:**
 ```json
@@ -187,6 +190,19 @@ List all projects (called by `/4dm1n`)
 }
 ```
 
+### `POST /api/admin/auth`
+Validate dashboard password (BotID protected)
+
+**Request:**
+```json
+{
+  "password": "your-manage-password"
+}
+```
+
+### `DELETE /api/admin/projects/[projectId]`
+Remove a project and all files (requires `x-manage-password`, BotID protected)
+
 ## Security
 
 ### Privacy
@@ -195,34 +211,11 @@ List all projects (called by `/4dm1n`)
 - No directory listing - only authenticated API can serve files
 - **Security through unpredictability** - no one can guess your project ID
 
-### No Authentication
-- `/4dm1n` is **not password protected** (security through obscurity)
-- This is intentional for the free plan (simple, no auth needed)
-- For production, consider adding password protection:
-
-```typescript
-// In 4dm1n/page.tsx - add at top
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'change-me';
-
-export default function AdminPage() {
-  const [password, setPassword] = useState('');
-  const [authenticated, setAuthenticated] = useState(false);
-
-  if (!authenticated) {
-    return (
-      <input 
-        type="password" 
-        onChange={(e) => {
-          if (e.target.value === ADMIN_PASSWORD) {
-            setAuthenticated(true);
-          }
-        }}
-      />
-    );
-  }
-  // ... rest of admin page
-}
-```
+### Admin Authentication
+- `/admin` is password protected
+- Password checks are server-side and matched against `MANAGE_PASSWORD`
+- There is no default fallback password
+- Vercel BotID protects admin authentication and project deletion requests
 
 ## Limitations & Considerations
 
@@ -249,25 +242,20 @@ export default function AdminPage() {
 ## Customization
 
 ### Change Admin Route
-In `SETUP.md` it's `/4dm1n`, but you can change it:
+Default route is `/admin`, but you can change it:
 
 ```bash
 # Rename the folder
-mv app/4dm1n app/super-secret-admin
+mv app/admin app/super-secret-admin
 
 # Update any links
 # Update this document
 ```
 
-### Add Deletion
-Add a delete button in `app/4dm1n/page.tsx`:
-
-```typescript
-const deleteProject = async (projectId: string) => {
-  // Would need to create DELETE /api/admin/projects/[projectId]
-  // That calls delete() from @vercel/blob
-};
-```
+### Project Deletion
+- Admin dashboard includes project deletion
+- Confirmation requires entering the exact project ID
+- Endpoint: `DELETE /api/admin/projects/[projectId]`
 
 ### Add View Counter
 In `app/[projectId]/page.tsx`, increment a counter:
@@ -315,7 +303,7 @@ This app is extremely cheap to run - mostly just blob storage for user uploads.
 
 1. **Deploy to Vercel** - Click "Publish" button in v0 UI
 2. **Test uploads** - Try uploading a ZIP file from the landing page
-3. **Check admin** - Visit `/4dm1n` to see the project listed
+3. **Check admin** - Visit `/admin` to see the project listed
 4. **Share links** - Copy the project link and share with anyone
 
 ---

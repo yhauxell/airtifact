@@ -1,5 +1,5 @@
 import { list } from '@vercel/blob';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 interface ProjectMetadata {
   projectId: string;
@@ -9,8 +9,21 @@ interface ProjectMetadata {
   files: string[];
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (!process.env.MANAGE_PASSWORD) {
+      console.error('[v0] MANAGE_PASSWORD is not configured');
+      return NextResponse.json(
+        { error: 'Manage password is not configured' },
+        { status: 500 }
+      );
+    }
+
+    const providedPassword = request.headers.get('x-manage-password');
+    if (!providedPassword || providedPassword !== process.env.MANAGE_PASSWORD) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     // Check if Blob token is available
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       console.warn('[v0] BLOB_READ_WRITE_TOKEN not configured');
