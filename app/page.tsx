@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Upload, Check, Copy, AlertCircle, Loader } from 'lucide-react';
-
-const MAX_UPLOAD_SIZE_MB = 5;
-const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
 
 interface UploadResponse {
   projectId: string;
@@ -20,7 +18,23 @@ export default function Page() {
   );
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetch('/api/config')
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.maxFileUploadSize === 'number') {
+          setMaxUploadSizeBytes(data.maxFileUploadSize);
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch upload config, using default limit:', err);
+      });
+  }, []);
+
+  const maxUploadSizeMB = maxUploadSizeBytes / (1024 * 1024);
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -54,8 +68,8 @@ export default function Page() {
       return;
     }
 
-    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
-      setError(`File size must be less than ${MAX_UPLOAD_SIZE_MB}MB`);
+    if (file.size > maxUploadSizeBytes) {
+      setError(`File size must be less than ${maxUploadSizeMB}MB`);
       return;
     }
 
@@ -177,7 +191,7 @@ export default function Page() {
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary">•</span>
-                  <span>Maximum file size: {MAX_UPLOAD_SIZE_MB}MB</span>
+                  <span>Maximum file size: {maxUploadSizeMB}MB</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary">•</span>

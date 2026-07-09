@@ -2,9 +2,13 @@ import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
+import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
 
-const MAX_UPLOAD_SIZE_MB = 5;
-const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+const MAX_UPLOAD_SIZE_BYTES = parseInt(
+  process.env.MAX_FILE_UPLOAD_SIZE ?? String(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES),
+  10
+);
+const MAX_UPLOAD_SIZE_MB = MAX_UPLOAD_SIZE_BYTES / (1024 * 1024);
 const BLOCKED_DIRECTORY_NAMES = new Set(['__macosx', '__macos']);
 
 // Generate a cryptographically secure random project ID
