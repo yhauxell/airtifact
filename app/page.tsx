@@ -2,8 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Upload, Check, Copy, AlertCircle, Loader } from 'lucide-react';
-
-const DEFAULT_MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024;
+import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
 
 interface UploadResponse {
   projectId: string;
@@ -19,7 +18,7 @@ export default function Page() {
   );
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_UPLOAD_SIZE_BYTES);
+  const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -30,8 +29,8 @@ export default function Page() {
           setMaxUploadSizeBytes(data.maxFileUploadSize);
         }
       })
-      .catch(() => {
-        // keep default on error
+      .catch((err) => {
+        console.warn('Failed to fetch upload config, using default limit:', err);
       });
   }, []);
 

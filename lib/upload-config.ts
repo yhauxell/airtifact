@@ -1,0 +1,1 @@
+export const DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB

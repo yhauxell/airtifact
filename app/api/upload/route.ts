@@ -2,9 +2,10 @@ import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
+import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
 
 const MAX_UPLOAD_SIZE_BYTES = parseInt(
-  process.env.MAX_FILE_UPLOAD_SIZE ?? String(5 * 1024 * 1024),
+  process.env.MAX_FILE_UPLOAD_SIZE ?? String(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES),
   10
 );
 const MAX_UPLOAD_SIZE_MB = MAX_UPLOAD_SIZE_BYTES / (1024 * 1024);
