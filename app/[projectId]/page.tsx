@@ -89,7 +89,7 @@ export default async function ProjectPage({
           border: 'none',
         }}
         title="Uploaded Project"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals"
       />
     </div>
   );

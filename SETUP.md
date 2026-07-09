@@ -6,7 +6,7 @@ A super simple Next.js app that lets you upload ZIP files containing HTML sites 
 
 ✅ **Drag-and-drop ZIP upload** - Beautiful UI with shadcn styling  
 ✅ **Cryptographically secure private IDs** - Random 32-char hex IDs (impossible to guess)  
-✅ **Vercel Blob storage** - Files stored as private blobs, served via authenticated API  
+✅ **Vercel Blob storage** - Files stored as public blobs, accessible via project page or API  
 ✅ **Shareable links** - Get instant URLs to share with anyone  
 ✅ **Admin dashboard** - Password-protected `/admin` route lists and removes projects  
 ✅ **Asset serving** - CSS, JS, images, fonts all properly served with correct MIME types  
@@ -15,10 +15,11 @@ A super simple Next.js app that lets you upload ZIP files containing HTML sites 
 ## Architecture
 
 ### File Storage: Vercel Blob
-- Files stored with `access: 'private'` so they can't be accessed directly
+- Files stored with `access: 'public'` — directly accessible via their Vercel Blob CDN URL
 - Path structure: `projects/{projectId}/{filename}`
 - Project metadata stored in `projects/{projectId}/metadata.json`
-- Files served via API route `/api/projects/[projectId]/[...path]` to authenticate access
+- Files are also served via API route `/api/projects/[projectId]/[...path]`
+- **Note:** Project confidentiality relies on the secrecy of the 32-character project ID. Anyone who knows the CDN URL of a file can access it directly without going through the app.
 
 ### Project IDs
 - Generated using `crypto.randomBytes(16).toString('hex')` → 32-character hex strings
@@ -207,9 +208,9 @@ Remove a project and all files (requires `x-manage-password`, BotID protected)
 
 ### Privacy
 - Project IDs are cryptographically random (32 hex chars)
-- Files stored as `private` in Vercel Blob
-- No directory listing - only authenticated API can serve files
-- **Security through unpredictability** - no one can guess your project ID
+- Files stored as `public` in Vercel Blob — treat project IDs as secrets since anyone with a direct CDN URL can access files
+- No directory listing exposed through the app — only valid project IDs can be accessed via the UI
+- **Security through unpredictability** — no one can guess your project ID
 
 ### Admin Authentication
 - `/admin` is password protected
