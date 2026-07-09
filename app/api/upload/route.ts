@@ -3,8 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { randomBytes } from 'crypto';
 
-const MAX_UPLOAD_SIZE_MB = 5;
-const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+const MAX_UPLOAD_SIZE_BYTES = parseInt(
+  process.env.MAX_FILE_UPLOAD_SIZE ?? String(5 * 1024 * 1024),
+  10
+);
+const MAX_UPLOAD_SIZE_MB = MAX_UPLOAD_SIZE_BYTES / (1024 * 1024);
 const BLOCKED_DIRECTORY_NAMES = new Set(['__macosx', '__macos']);
 
 // Generate a cryptographically secure random project ID
