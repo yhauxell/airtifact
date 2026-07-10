@@ -221,9 +221,10 @@ Remove a project and all files (requires `x-manage-password`, BotID protected)
 ## Limitations & Considerations
 
 ### File Size
-- Max file size: 5MB (enforced client-side and server-side)
+- Max file size is configurable via `MAX_FILE_UPLOAD_SIZE` (bytes)
+- Default limit is 5MB when `MAX_FILE_UPLOAD_SIZE` is not set
+- Limit is enforced client-side and server-side
 - Vercel Blob has generous limits for free tier
-- Adjust in `app/page.tsx` if needed
 
 ### Simultaneous Uploads
 - Each upload creates one project

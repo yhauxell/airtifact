@@ -1,26 +1,23 @@
 # static-website-uploader
 
-A simple static website uploader and starter built with [Next.js](https://nextjs.org).
+Upload a ZIP file containing a static website and instantly get a private share link.
 
 ## Live Demo
 
 🔗 https://staticmarkup.vercel.app/
 
-## Overview
+## Features
 
-This repository contains a TypeScript-first Next.js project for building and deploying static web experiences.
-
-It is now prepared as a public repository so others can:
-- fork and customize it,
-- open issues,
-- suggest improvements,
-- and contribute via pull requests.
+- Drag-and-drop ZIP upload UI
+- Project links using secure random IDs
+- Static asset hosting through Vercel Blob
+- Password-protected admin dashboard for project management
 
 ## Tech Stack
 
-- TypeScript
 - Next.js
-- CSS
+- TypeScript
+- Vercel Blob
 
 ## Getting Started
 
@@ -37,7 +34,18 @@ cd static-website-uploader
 npm install
 ```
 
-### 3) Run the development server
+### 3) Configure environment variables
+
+Create a `.env.local` file and set:
+
+```bash
+BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+MANAGE_PASSWORD=your_admin_password
+# Optional, in bytes. Defaults to 5MB when unset.
+MAX_FILE_UPLOAD_SIZE=5242880
+```
+
+### 4) Run the development server
 
 ```bash
 npm run dev
@@ -52,28 +60,16 @@ npm run build
 npm run start
 ```
 
-## Project Structure
+## Deployment & Setup
 
-- `app/page.tsx` — main page entry
-- `app/` — app router pages/components
-- `public/` — static assets
+For full deployment details, architecture notes, and troubleshooting, see:
+
+- [SETUP.md](SETUP.md)
 
 ## Contributing
 
-Contributions are welcome.
-
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature/your-feature`)
-3. Commit your changes (`git commit -m "feat: add your feature"`)
-4. Push to your fork (`git push origin feature/your-feature`)
-5. Open a Pull Request
-
-Please keep PRs focused and include a clear description of changes.
-
-## Issues & Feedback
-
-If you find a bug or have an idea for improvement, please open an issue.
+Contributions are welcome. Please keep pull requests focused and include a clear description of changes.
 
 ## License
 
-If you want this repo to be fully open-source, add a `LICENSE` file (MIT is a common choice).
+MIT — see [LICENSE](LICENSE).
