@@ -1,33 +1,79 @@
 # static-website-uploader
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+A simple static website uploader and starter built with [Next.js](https://nextjs.org).
 
-## Built with v0
+## Live Demo
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+🔗 https://staticmarkup.vercel.app/
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_f33XPo5kO7gn1OYV0s8CvNd4RB5F)
+## Overview
+
+This repository contains a TypeScript-first Next.js project for building and deploying static web experiences.
+
+It is now prepared as a public repository so others can:
+- fork and customize it,
+- open issues,
+- suggest improvements,
+- and contribute via pull requests.
+
+## Tech Stack
+
+- TypeScript
+- Next.js
+- CSS
 
 ## Getting Started
 
-First, run the development server:
+### 1) Clone the repository
+
+```bash
+git clone https://github.com/yhauxell/static-website-uploader.git
+cd static-website-uploader
+```
+
+### 2) Install dependencies
+
+```bash
+npm install
+```
+
+### 3) Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build for Production
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
 
-To learn more, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+- `app/page.tsx` — main page entry
+- `app/` — app router pages/components
+- `public/` — static assets
+
+## Contributing
+
+Contributions are welcome.
+
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m "feat: add your feature"`)
+4. Push to your fork (`git push origin feature/your-feature`)
+5. Open a Pull Request
+
+Please keep PRs focused and include a clear description of changes.
+
+## Issues & Feedback
+
+If you find a bug or have an idea for improvement, please open an issue.
+
+## License
+
+If you want this repo to be fully open-source, add a `LICENSE` file (MIT is a common choice).
