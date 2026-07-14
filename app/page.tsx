@@ -191,6 +191,15 @@ export default function Page() {
           <User className="size-4" />
         </Link>
         <a
+          href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fstatic-website-uploader"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+        >
+          <svg className="size-3 fill-current" viewBox="0 0 76 65" xmlns="http://www.w3.org/2000/svg"><path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/></svg>
+          Deploy
+        </a>
+        <a
           href="https://github.com/yhauxell/static-website-uploader"
           target="_blank"
           rel="noreferrer"
