@@ -13,10 +13,10 @@ export async function DELETE(
       return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    if (!process.env.MANAGE_PASSWORD) {
-      console.error('[v0] MANAGE_PASSWORD is not configured');
+    if (!process.env.ADMIN_PASSWORD_HASH || !process.env.SESSION_SECRET) {
+      console.error('[v0] Admin configuration is not configured');
       return NextResponse.json(
-        { error: 'Manage password is not configured' },
+        { error: 'Admin configuration is not configured' },
         { status: 500 }
       );
     }
