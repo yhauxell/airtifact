@@ -9,8 +9,14 @@ type Step = 'idle' | 'uploading' | 'success';
 interface UploadResponse {
   projectId: string;
   shareUrl: string;
+  removeUrl: string;
+  deleteToken: string;
   files: string[];
 }
+
+const COPY_RESET_DELAY_MS = 2000;
+
+type CopyField = 'share' | 'remove' | 'token';
 
 export default function Page() {
   const [step, setStep] = useState<Step>('idle');
@@ -19,7 +25,7 @@ export default function Page() {
   const [uploadingFileName, setUploadingFileName] = useState('');
   const [uploadedProject, setUploadedProject] = useState<UploadResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
+  const [copiedField, setCopiedField] = useState<CopyField | null>(null);
   const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES);
   const [starCount, setStarCount] = useState<number | null>(null);
   const [isDark, setIsDark] = useState(false);
@@ -157,12 +163,10 @@ export default function Page() {
     xhr.send(formData);
   };
 
-  const copyToClipboard = async () => {
-    if (!uploadedProject) return;
-    const fullUrl = `${window.location.origin}${uploadedProject.shareUrl}`;
-    await navigator.clipboard.writeText(fullUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async (value: string, field: CopyField) => {
+    await navigator.clipboard.writeText(value);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField((current) => (current === field ? null : current)), COPY_RESET_DELAY_MS);
   };
 
   const reset = () => {
@@ -170,6 +174,7 @@ export default function Page() {
     setUploadedProject(null);
     setError(null);
     setProgress(0);
+    setCopiedField(null);
   };
 
   return (
@@ -283,6 +288,7 @@ export default function Page() {
             <div className="space-y-6 animate-in fade-in duration-200">
               {(() => {
                 const fullUrl = `${window.location.origin}${uploadedProject.shareUrl}`;
+                const removeUrl = `${window.location.origin}${uploadedProject.removeUrl}`;
                 return (
                   <>
                     {/* Thumbnail preview */}
@@ -312,21 +318,72 @@ export default function Page() {
                       </div>
                     </div>
 
-                    {/* Share URL */}
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        readOnly
-                        value={fullUrl}
-                        className="flex-1 min-w-0 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-mono text-foreground focus:outline-none"
-                      />
-                      <button
-                        onClick={copyToClipboard}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-3 py-2 text-sm font-medium hover:opacity-80 transition-opacity shrink-0"
-                      >
-                        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                        {copied ? 'Copied' : 'Copy'}
-                      </button>
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                          Share link
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={fullUrl}
+                            className="flex-1 min-w-0 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-mono text-foreground focus:outline-none"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(fullUrl, 'share')}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
+                          >
+                            {copiedField === 'share' ? <Check className="size-4" /> : <Copy className="size-4" />}
+                            {copiedField === 'share' ? 'Copied' : 'Copy'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                          Removal link
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={removeUrl}
+                            className="flex-1 min-w-0 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-mono text-foreground focus:outline-none"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(removeUrl, 'remove')}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                          >
+                            {copiedField === 'remove' ? <Check className="size-4" /> : <Copy className="size-4" />}
+                            {copiedField === 'remove' ? 'Copied' : 'Copy'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                          Secret token
+                        </p>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            readOnly
+                            value={uploadedProject.deleteToken}
+                            className="flex-1 min-w-0 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-mono text-foreground focus:outline-none"
+                          />
+                          <button
+                            onClick={() => copyToClipboard(uploadedProject.deleteToken, 'token')}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                          >
+                            {copiedField === 'token' ? <Check className="size-4" /> : <Copy className="size-4" />}
+                            {copiedField === 'token' ? 'Copied' : 'Copy'}
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Save the removal link or this token if you want to delete the project later.
+                        </p>
+                      </div>
                     </div>
 
                     {/* CTAs */}
@@ -335,14 +392,14 @@ export default function Page() {
                         href={uploadedProject.shareUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-80 transition-opacity"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80"
                       >
                         Open project
                         <ArrowRight className="size-4" />
                       </a>
                       <button
                         onClick={reset}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                       >
                         Upload another
                       </button>

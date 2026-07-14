@@ -12,6 +12,7 @@ Upload a ZIP file containing a static website and instantly get a private share 
 - Project links using secure random IDs
 - Static asset hosting through Vercel Blob
 - Password-protected admin dashboard for project management
+- Self-service project removal with a secret delete link and token
 
 ## Tech Stack
 

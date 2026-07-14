@@ -1,5 +1,6 @@
 import { list } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
+import { isValidProjectId } from '@/lib/project-removal';
 
 export async function GET(
   request: NextRequest,
@@ -20,10 +21,17 @@ export async function GET(
       );
     }
 
-    if (!/^[a-f0-9]{32}$/.test(projectId)) {
+    if (!isValidProjectId(projectId)) {
       return NextResponse.json(
         { error: 'Invalid project ID' },
         { status: 400 }
+      );
+    }
+
+    if (filePath === 'metadata.json') {
+      return NextResponse.json(
+        { error: 'File not found' },
+        { status: 404 }
       );
     }
 
