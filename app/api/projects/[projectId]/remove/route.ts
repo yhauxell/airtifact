@@ -61,16 +61,24 @@ export async function DELETE(
       );
     }
 
-    const metadata = (await metadataResponse.json()) as Partial<StoredProjectMetadata>;
-    if (typeof metadata.deleteTokenHash !== 'string') {
-      return NextResponse.json(
-        { error: 'Project removal is unavailable for this project' },
-        { status: 400 }
-      );
-    }
+    const metadata = (await metadataResponse.json()) as Partial<StoredProjectMetadata> & { owner?: string };
+    
+    // Check if user is the owner
+    const cookieValue = request.cookies.get('auth_session')?.value;
+    const sessionUser = require('@/lib/session').validateUserSession(cookieValue);
+    const isOwner = sessionUser && metadata.owner === sessionUser;
 
-    if (!isDeleteTokenMatch(token, metadata.deleteTokenHash)) {
-      return NextResponse.json({ error: 'Invalid delete token' }, { status: 401 });
+    if (!isOwner) {
+      if (typeof metadata.deleteTokenHash !== 'string') {
+        return NextResponse.json(
+          { error: 'Project removal is unavailable for this project' },
+          { status: 400 }
+        );
+      }
+
+      if (!isDeleteTokenMatch(token, metadata.deleteTokenHash)) {
+        return NextResponse.json({ error: 'Invalid delete token or unauthorized' }, { status: 401 });
+      }
     }
 
     await del(blobs.map((blob) => blob.pathname));

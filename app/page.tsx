@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Upload, Copy, Check, Star, Sun, Moon, ArrowRight } from 'lucide-react';
+import { Upload, Copy, Check, Star, Sun, Moon, ArrowRight, User } from 'lucide-react';
 import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
+import Link from 'next/link';
 
 type Step = 'idle' | 'uploading' | 'success';
 
@@ -160,6 +161,7 @@ export default function Page() {
     };
 
     xhr.open('POST', '/api/upload');
+    xhr.setRequestHeader('X-Web-Client', 'true');
     xhr.send(formData);
   };
 
@@ -181,6 +183,13 @@ export default function Page() {
     <div className="relative min-h-screen bg-background text-foreground flex flex-col">
       {/* Top-right controls */}
       <div className="fixed top-4 right-4 flex items-center gap-2 z-10">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          title="Dashboard / Login"
+        >
+          <User className="size-4" />
+        </Link>
         <a
           href="https://github.com/yhauxell/static-website-uploader"
           target="_blank"
