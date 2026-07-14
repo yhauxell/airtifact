@@ -1,7 +1,8 @@
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 
 export const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/;
-export const DELETE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
+export const DELETE_TOKEN_PATTERN = /^[a-f0-9]{1,64}$/;
+export const DELETE_TOKEN_HASH_PATTERN = /^[a-f0-9]{64}$/;
 
 export interface StoredProjectMetadata {
   projectId: string;
@@ -17,7 +18,7 @@ export function generateProjectId(): string {
 }
 
 export function generateDeleteToken(): string {
-  return randomBytes(32).toString('hex');
+  return randomBytes(3).toString('hex');
 }
 
 export function hashDeleteToken(token: string): string {
@@ -33,7 +34,7 @@ export function isValidDeleteToken(token: string): boolean {
 }
 
 export function isDeleteTokenMatch(token: string, expectedHash: string): boolean {
-  if (!isValidDeleteToken(token) || !DELETE_TOKEN_PATTERN.test(expectedHash)) {
+  if (!isValidDeleteToken(token) || !DELETE_TOKEN_HASH_PATTERN.test(expectedHash)) {
     return false;
   }
 
