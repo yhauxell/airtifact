@@ -204,7 +204,7 @@ export default function Page() {
           {/* Step 1 — Idle */}
           {step === 'idle' && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              <div className="space-y-1">
+              <div className="space-y-1 text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground">
                   Drop your site.
                 </h1>
