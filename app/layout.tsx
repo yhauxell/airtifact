@@ -31,8 +31,19 @@ export const metadata: Metadata = {
   },
 }
 
-// Inline script to apply dark class before first paint — prevents flash
-const darkModeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})();`
+// Inline script runs before first paint to apply .dark on <html> without flash.
+// Reads localStorage 'theme' key, falls back to prefers-color-scheme.
+const darkModeScript = [
+  '(function(){',
+  "  try {",
+  "    var t = localStorage.getItem('theme');",
+  "    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;",
+  "    if (t === 'dark' || (t === null && prefersDark)) {",
+  "      document.documentElement.classList.add('dark');",
+  "    }",
+  "  } catch (e) {}",
+  '})();',
+].join('\n');
 
 export default function RootLayout({
   children,

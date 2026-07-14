@@ -46,9 +46,12 @@ export default function Page() {
 
   useEffect(() => {
     fetch('https://api.github.com/repos/yhauxell/static-website-uploader')
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) return;
+        return res.json();
+      })
       .then((data) => {
-        if (typeof data.stargazers_count === 'number') {
+        if (data && typeof data.stargazers_count === 'number') {
           setStarCount(data.stargazers_count);
         }
       })
@@ -278,68 +281,75 @@ export default function Page() {
           {/* Step 3 — Success */}
           {step === 'success' && uploadedProject && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              {/* Thumbnail preview */}
-              <div
-                ref={previewContainerRef}
-                className="relative w-full rounded-xl border border-border overflow-hidden bg-muted"
-                style={{ aspectRatio: '16/9' }}
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '900px',
-                    height: '506.25px',
-                    transform: `scale(${previewScale})`,
-                    transformOrigin: 'top left',
-                    pointerEvents: 'none',
-                  }}
-                >
-                  <iframe
-                    src={`${window.location.origin}${uploadedProject.shareUrl}`}
-                    title="Project preview"
-                    sandbox="allow-scripts allow-same-origin"
-                    style={{ width: '900px', height: '506.25px', border: 'none' }}
-                  />
-                </div>
-              </div>
+              {(() => {
+                const fullUrl = `${window.location.origin}${uploadedProject.shareUrl}`;
+                return (
+                  <>
+                    {/* Thumbnail preview */}
+                    <div
+                      ref={previewContainerRef}
+                      className="relative w-full rounded-xl border border-border overflow-hidden bg-muted"
+                      style={{ aspectRatio: '16/9' }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '900px',
+                          height: '506.25px',
+                          transform: `scale(${previewScale})`,
+                          transformOrigin: 'top left',
+                          pointerEvents: 'none',
+                        }}
+                      >
+                        <iframe
+                          src={fullUrl}
+                          title="Project preview"
+                          sandbox="allow-scripts"
+                          style={{ width: '900px', height: '506.25px', border: 'none' }}
+                        />
+                      </div>
+                    </div>
 
-              {/* Share URL */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${window.location.origin}${uploadedProject.shareUrl}`}
-                  className="flex-1 min-w-0 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-mono text-foreground focus:outline-none"
-                />
-                <button
-                  onClick={copyToClipboard}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-3 py-2 text-sm font-medium hover:opacity-80 transition-opacity shrink-0"
-                >
-                  {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                  {copied ? 'Copied' : 'Copy'}
-                </button>
-              </div>
+                    {/* Share URL */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={fullUrl}
+                        className="flex-1 min-w-0 rounded-lg border border-border bg-muted px-3 py-2 text-xs font-mono text-foreground focus:outline-none"
+                      />
+                      <button
+                        onClick={copyToClipboard}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-3 py-2 text-sm font-medium hover:opacity-80 transition-opacity shrink-0"
+                      >
+                        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+                        {copied ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
 
-              {/* CTAs */}
-              <div className="flex items-center justify-between">
-                <a
-                  href={uploadedProject.shareUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-80 transition-opacity"
-                >
-                  Open project
-                  <ArrowRight className="size-4" />
-                </a>
-                <button
-                  onClick={reset}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Upload another
-                </button>
-              </div>
+                    {/* CTAs */}
+                    <div className="flex items-center justify-between">
+                      <a
+                        href={uploadedProject.shareUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-80 transition-opacity"
+                      >
+                        Open project
+                        <ArrowRight className="size-4" />
+                      </a>
+                      <button
+                        onClick={reset}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Upload another
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 
