@@ -221,8 +221,8 @@ Remove a project and all files (requires `x-manage-password`, BotID protected)
 ## Limitations & Considerations
 
 ### File Size
-- Max file size is configurable via `MAX_FILE_UPLOAD_SIZE` (bytes)
-- Default limit is 5MB when `MAX_FILE_UPLOAD_SIZE` is not set
+- Max file size is configurable via `MAX_ANON_UPLOAD_SIZE_BYTES` and `MAX_AUTH_UPLOAD_SIZE_BYTES`
+- Default limit is 5MB for anonymous and 50MB for authenticated users when not set
 - Limit is enforced client-side and server-side
 - Vercel Blob has generous limits for free tier
 

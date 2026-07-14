@@ -43,7 +43,9 @@ Create a `.env.local` file and set:
 BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
 MANAGE_PASSWORD=your_admin_password
 # Optional, in bytes. Defaults to 5MB when unset.
-MAX_FILE_UPLOAD_SIZE=5242880
+MAX_ANON_UPLOAD_SIZE_BYTES=5242880
+MAX_AUTH_UPLOAD_SIZE_BYTES=52428800
+ADMIN_PASSWORD_HASH=your_secure_password_hash
 ```
 
 ### 4) Run the development server

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Upload, Copy, Check, Star, Sun, Moon, ArrowRight, User } from 'lucide-react';
-import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
+import { DEFAULT_MAX_ANON_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
 import Link from 'next/link';
 
 type Step = 'idle' | 'uploading' | 'success';
@@ -27,7 +27,7 @@ export default function Page() {
   const [uploadedProject, setUploadedProject] = useState<UploadResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<CopyField | null>(null);
-  const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES);
+  const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_ANON_UPLOAD_SIZE_BYTES);
   const [starCount, setStarCount] = useState<number | null>(null);
   const [isDark, setIsDark] = useState(false);
   const [previewScale, setPreviewScale] = useState(0.5);

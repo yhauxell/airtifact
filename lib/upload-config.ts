@@ -1,5 +1,2 @@
 export const DEFAULT_MAX_ANON_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 export const DEFAULT_MAX_AUTH_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
-
-// Legacy constant for backwards compatibility
-export const DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES = DEFAULT_MAX_ANON_UPLOAD_SIZE_BYTES;
