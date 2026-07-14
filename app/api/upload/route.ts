@@ -1,8 +1,13 @@
 import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 import JSZip from 'jszip';
-import { randomBytes } from 'crypto';
 import { DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES } from '@/lib/upload-config';
+import {
+  generateDeleteToken,
+  generateProjectId,
+  getProjectRemovalUrl,
+  hashDeleteToken,
+} from '@/lib/project-removal';
 
 const MAX_UPLOAD_SIZE_BYTES = parseInt(
   process.env.MAX_FILE_UPLOAD_SIZE ?? String(DEFAULT_MAX_FILE_UPLOAD_SIZE_BYTES),
@@ -11,16 +16,11 @@ const MAX_UPLOAD_SIZE_BYTES = parseInt(
 const MAX_UPLOAD_SIZE_MB = MAX_UPLOAD_SIZE_BYTES / (1024 * 1024);
 const BLOCKED_DIRECTORY_NAMES = new Set(['__macosx', '__macos']);
 
-// Generate a cryptographically secure random project ID
-function generateProjectId(): string {
-  return randomBytes(16).toString('hex');
-}
-
 function normalizeZipPath(filePath: string): string | null {
   const normalizedPath = filePath
     .replace(/\\/g, '/')
     .replace(/^\/+/, '')
-    .replace(/\/+/g, '/');
+    .replace(/\/+?/g, '/');
 
   if (!normalizedPath) {
     return null;
@@ -69,16 +69,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert File to Buffer and extract ZIP
     const buffer = Buffer.from(await file.arrayBuffer());
     const projectId = generateProjectId();
+    const deleteToken = generateDeleteToken();
+    const deleteTokenHash = hashDeleteToken(deleteToken);
     const jszip = new JSZip();
     const zip = await jszip.loadAsync(buffer);
 
     const uploadedFiles: string[] = [];
     let hasIndexHtml = false;
 
-    // Extract and upload files
     for (const [filePath, file] of Object.entries(zip.files)) {
       const normalizedPath = normalizeZipPath(filePath);
 
@@ -86,21 +86,17 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Skip directories
       if (file.dir) continue;
 
-      // Track index.html
       if (normalizedPath.toLowerCase().endsWith('index.html')) {
         hasIndexHtml = true;
       }
 
-      // Get file buffer
       const fileBuffer = await file.async('arraybuffer');
-      const buffer_obj = Buffer.from(fileBuffer);
+      const bufferObject = Buffer.from(fileBuffer);
 
-      // Upload to Vercel Blob
       const blobPath = `projects/${projectId}/${normalizedPath}`;
-      await put(blobPath, buffer_obj, {
+      await put(blobPath, bufferObject, {
         access: 'public',
       });
 
@@ -114,13 +110,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Store project metadata
     const metadata = {
       projectId,
       uploadDate: new Date().toISOString(),
       fileName: file.name,
       fileCount: uploadedFiles.length,
       files: uploadedFiles.sort(),
+      deleteTokenHash,
     };
 
     await put(
@@ -132,6 +128,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       projectId,
       shareUrl: `/${projectId}`,
+      removeUrl: getProjectRemovalUrl(projectId, deleteToken),
+      deleteToken,
       files: uploadedFiles,
       metadata,
     });

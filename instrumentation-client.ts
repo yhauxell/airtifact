@@ -10,5 +10,9 @@ initBotId({
       path: '/api/admin/projects/*',
       method: 'DELETE',
     },
+    {
+      path: '/api/projects/*/remove',
+      method: 'DELETE',
+    },
   ],
 });
