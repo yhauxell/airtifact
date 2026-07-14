@@ -12,23 +12,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Static Website Uploader',
   description: 'Upload a ZIP, get a shareable link instantly.',
-  icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
-  },
 }
 
 // Inline script runs before first paint to apply .dark on <html> without flash.
