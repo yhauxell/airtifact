@@ -2,25 +2,7 @@ import { list } from '@vercel/blob';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-export async function generateStaticParams() {
-  try {
-    const { blobs } = await list({ prefix: 'projects/' });
-    
-    // Extract unique project IDs from metadata.json files
-    const projectIds = new Set<string>();
-    for (const blob of blobs) {
-      const match = blob.pathname.match(/^projects\/([a-f0-9]+)\/metadata\.json$/);
-      if (match) {
-        projectIds.add(match[1]);
-      }
-    }
-
-    return Array.from(projectIds).map((id) => ({ projectId: id }));
-  } catch (error) {
-    console.error('[v0] Error generating params:', error);
-    return [];
-  }
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
@@ -62,6 +44,25 @@ export default async function ProjectPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
+  
+  let isBlocked = false;
+  try {
+    const { blobs } = await list({ prefix: `projects/${projectId}/metadata.json` });
+    if (blobs.length > 0) {
+      const response = await fetch(blobs[0].url, { cache: 'no-store' });
+      const metadata = await response.json();
+      if (metadata.owner) {
+        const userBlobs = await list({ prefix: `users/${metadata.owner}/profile.json` });
+        if (userBlobs.blobs.length > 0) {
+          const userResponse = await fetch(userBlobs.blobs[0].url, { cache: 'no-store' });
+          const userProfile = await userResponse.json();
+          isBlocked = !!userProfile.isBlocked;
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to fetch user block status', err);
+  }
 
   const indexHtml = await getProjectIndex(projectId);
 
@@ -72,6 +73,11 @@ export default async function ProjectPage({
   // This component will render the uploaded HTML with a base URL for relative asset serving
   return (
     <div className="relative">
+      {isBlocked && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-center py-2 font-medium shadow-md text-sm">
+          Project is under review for removal.
+        </div>
+      )}
       <Link
         href="/"
         className="fixed right-3 top-3 z-20 rounded-full bg-black/75 px-3 py-1 text-xs font-medium text-white shadow-lg transition-opacity hover:opacity-90"
