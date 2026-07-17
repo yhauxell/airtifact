@@ -1,0 +1,256 @@
+#!/usr/bin/env node
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError, } from "@modelcontextprotocol/sdk/types.js";
+import { promises as fsPromises, existsSync, statSync } from "fs";
+import * as path from "path";
+import JSZip from "jszip";
+import * as dotenv from "dotenv";
+// Load environment variables from .env if present
+dotenv.config();
+// Helper to check if an object matches the PublishToolArgs interface
+function isPublishToolArgs(args) {
+    return (args &&
+        typeof args === "object" &&
+        typeof args.directoryPath === "string" &&
+        (args.serverUrl === undefined || typeof args.serverUrl === "string") &&
+        (args.authToken === undefined || typeof args.authToken === "string"));
+}
+/**
+ * Recursively adds directory contents to a JSZip instance
+ */
+async function addDirectoryToZip(zip, rootPath, currentPath) {
+    const entries = await fsPromises.readdir(currentPath, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(currentPath, entry.name);
+        const relativePath = path.relative(rootPath, fullPath);
+        // Skip common folders to avoid bloated uploads
+        if (entry.name === ".git" ||
+            entry.name === "node_modules" ||
+            entry.name === ".next" ||
+            entry.name === "dist" ||
+            entry.name === ".DS_Store" ||
+            entry.name.startsWith(".")) {
+            continue;
+        }
+        if (entry.isDirectory()) {
+            await addDirectoryToZip(zip, rootPath, fullPath);
+        }
+        else if (entry.isFile()) {
+            const fileContent = await fsPromises.readFile(fullPath);
+            // Normalize path separators to forward slashes for ZIP compliance
+            const zipPath = relativePath.split(path.sep).join("/");
+            zip.file(zipPath, fileContent);
+        }
+    }
+}
+class MCPUploaderServer {
+    server;
+    constructor() {
+        this.server = new Server({
+            name: "@yhauxell/static-site-mcp-server",
+            version: "1.0.0",
+        }, {
+            capabilities: {
+                tools: {},
+            },
+        });
+        this.setupTools();
+        // Error handling
+        this.server.onerror = (error) => console.error("[MCP Error]", error);
+        process.on("SIGINT", async () => {
+            await this.server.close();
+            process.exit(0);
+        });
+    }
+    setupTools() {
+        // List available tools
+        this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+            return {
+                tools: [
+                    {
+                        name: "publish_static_site",
+                        description: "Publishes a local directory containing a static website (with index.html at root) to the web uploader service.",
+                        inputSchema: {
+                            type: "object",
+                            properties: {
+                                directoryPath: {
+                                    type: "string",
+                                    description: "The absolute path to the local directory containing the static website files to upload.",
+                                },
+                                serverUrl: {
+                                    type: "string",
+                                    description: "Static Website Server Url. Optional. Defaults to STATIC_WEBSITE_UPLOADER_URL environment variable or http://localhost:3000.",
+                                },
+                                authToken: {
+                                    type: "string",
+                                    description: "Auth Token for authorization. Optional. Defaults to STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+                                },
+                            },
+                            required: ["directoryPath"],
+                        },
+                    },
+                ],
+            };
+        });
+        // Handle tool execution
+        this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+            if (request.params.name !== "publish_static_site") {
+                throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${request.params.name}`);
+            }
+            const args = request.params.arguments;
+            if (!isPublishToolArgs(args)) {
+                throw new McpError(ErrorCode.InvalidParams, "Invalid arguments for publish_static_site.");
+            }
+            try {
+                const { directoryPath, serverUrl, authToken } = args;
+                // 1. Resolve and validate directory
+                const absoluteDir = path.resolve(directoryPath);
+                if (!existsSync(absoluteDir)) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `Error: The directory path '${absoluteDir}' does not exist.`,
+                            },
+                        ],
+                        isError: true,
+                    };
+                }
+                const stats = statSync(absoluteDir);
+                if (!stats.isDirectory()) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `Error: The path '${absoluteDir}' is not a directory.`,
+                            },
+                        ],
+                        isError: true,
+                    };
+                }
+                // 2. Validate index.html exists
+                const indexHtmlPath = path.join(absoluteDir, "index.html");
+                if (!existsSync(indexHtmlPath)) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `Error: The directory '${absoluteDir}' must contain an 'index.html' file at the root.`,
+                            },
+                        ],
+                        isError: true,
+                    };
+                }
+                // 3. Resolve API URL and Key
+                const targetServerUrl = serverUrl ||
+                    process.env.STATIC_WEBSITE_UPLOADER_URL ||
+                    "http://localhost:3000";
+                const targetAuthToken = authToken ||
+                    process.env.STATIC_WEBSITE_UPLOADER_AUTH_TOKEN ||
+                    process.env.STATIC_WEBSITE_UPLOADER_API_KEY; // backwards compatibility fallback
+                if (!targetAuthToken) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: "Error: Auth Token is required for programmatic uploads. Please provide the 'authToken' argument or set the STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+                            },
+                        ],
+                        isError: true,
+                    };
+                }
+                // 4. Create the ZIP file in memory
+                console.error(`Packing files from ${absoluteDir}...`);
+                const zip = new JSZip();
+                await addDirectoryToZip(zip, absoluteDir, absoluteDir);
+                const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+                // 5. Send POST request to upload endpoint
+                const uploadEndpoint = `${targetServerUrl.replace(/\/+$/, "")}/api/upload`;
+                console.error(`Uploading to ${uploadEndpoint}...`);
+                const formData = new FormData();
+                const zipName = `${path.basename(absoluteDir) || "website"}.zip`;
+                const blob = new Blob([zipBuffer], { type: "application/zip" });
+                formData.append("file", blob, zipName);
+                const response = await fetch(uploadEndpoint, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${targetAuthToken}`,
+                    },
+                    body: formData,
+                });
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                }
+                catch (e) {
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `Upload failed. Server responded with status ${response.status} but invalid JSON: ${responseText.substring(0, 500)}`,
+                            },
+                        ],
+                        isError: true,
+                    };
+                }
+                if (!response.ok) {
+                    const errorMsg = result.error || responseText;
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: `Upload failed (${response.status}): ${errorMsg}`,
+                            },
+                        ],
+                        isError: true,
+                    };
+                }
+                const shareUrlAbsolute = `${targetServerUrl.replace(/\/+$/, "")}${result.shareUrl}`;
+                const removeUrlAbsolute = `${targetServerUrl.replace(/\/+$/, "")}${result.removeUrl}`;
+                // Return a beautiful markdown summary to the AI agent
+                const markdownOutput = `
+### 🎉 Website Published Successfully!
+
+- **Project ID**: \`${result.projectId}\`
+- **Files Packed**: ${result.files.length} files
+- **Shareable Live URL**: [${shareUrlAbsolute}](${shareUrlAbsolute})
+- **Removal URL**: [${removeUrlAbsolute}](${removeUrlAbsolute})
+
+*Make sure to save the Removal URL or the delete token (\`${result.deleteToken}\`) if you want to delete this project later.*
+        `.trim();
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: markdownOutput,
+                        },
+                    ],
+                };
+            }
+            catch (error) {
+                console.error("Error publishing static site:", error);
+                return {
+                    content: [
+                        {
+                            type: "text",
+                            text: `Internal MCP Server Error: ${error.message || String(error)}`,
+                        },
+                    ],
+                    isError: true,
+                };
+            }
+        });
+    }
+    async run() {
+        const transport = new StdioServerTransport();
+        await this.server.connect(transport);
+        console.error("Static Website Uploader MCP server running on stdio");
+    }
+}
+const server = new MCPUploaderServer();
+server.run().catch((error) => {
+    console.error("Fatal error running MCP server:", error);
+    process.exit(1);
+});
