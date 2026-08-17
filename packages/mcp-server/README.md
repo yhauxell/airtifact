@@ -1,10 +1,11 @@
 # @yhauxell/static-site-mcp-server
 
-An official Model Context Protocol (MCP) server that enables AI coding assistants (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to deploy local static websites directly to the **Static Website Uploader** service via API.
+An official Model Context Protocol (MCP) server that enables AI coding assistants (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to deploy local static websites directly to the **Static Website Uploader** service via API, and manage/list user projects.
 
 ## Features
 
 - **`publish_static_site` Tool**: Automatically packs a local folder (must contain `index.html`), zips it in memory, and deploys it programmatically to your uploader backend.
+- **`list_projects` Tool**: Lists all static website projects published by the authenticated user along with file counts, upload dates, and live URLs.
 - **Smart Ignore Rules**: Excludes unnecessary folders (`.git`, `node_modules`, `.next`, `dist`) and hidden OS files (`.DS_Store`) during compression.
 - **Rich Markdown Output**: Returns shareable live URLs and secret project removal URLs directly formatted for the AI agent context.
 
@@ -40,7 +41,7 @@ To register this MCP server in your agentic workspace, add the configuration bel
 
 ## Tool API Reference
 
-### `publish_static_site`
+### 1. `publish_static_site`
 
 Publishes a local directory containing a static website.
 
@@ -65,17 +66,39 @@ Publishes a local directory containing a static website.
 
 ---
 
+### 2. `list_projects`
+
+Lists all published static website projects owned by the authenticated user.
+
+#### Input Schema / Arguments
+
+- `serverUrl` (string, *optional*): Target uploader server URL. Overrides `STATIC_WEBSITE_UPLOADER_URL`.
+- `authToken` (string, *optional*): Auth token for authorization. Overrides `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN`.
+
+#### Success Response Example
+
+```json
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "### 📁 Published Projects (2)\n\n- **my-portfolio.zip** (`044a4449ae784808785e1bb0ca4df372`)\n  - **Live URL**: [http://localhost:3000/044a4449ae784808785e1bb0ca4df372](http://localhost:3000/044a4449ae784808785e1bb0ca4df372)\n  - **Files**: 3 files\n  - **Uploaded**: 8/17/2026, 12:00:00 PM"
+    }
+  ]
+}
+```
+
+---
+
 ## Example Usage with AI Agents
 
 ### Prompting Your AI Assistant
 
-> *"Build a single-page HTML portfolio for a software engineer in `./portfolio-site` and publish it using the `publish_static_site` tool."*
+> *"List all my uploaded static websites using the `list_projects` tool."*
 
-### Agent Workflow
-1. The AI agent creates `./portfolio-site/index.html`, `./portfolio-site/styles.css`, and associated assets.
-2. The agent executes `publish_static_site({ directoryPath: "/path/to/portfolio-site" })`.
-3. The MCP server zips the folder, POSTs it to the uploader endpoint, and returns the live URL.
-4. The AI agent presents the live URL directly in the chat interface!
+or
+
+> *"Build a single-page HTML portfolio in `./portfolio-site` and publish it using the `publish_static_site` tool."*
 
 ---
 

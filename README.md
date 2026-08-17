@@ -64,8 +64,17 @@ Packs a local directory (must contain `index.html` at root), zips it in memory, 
 | `serverUrl` | `string` | *Optional*. Target uploader server URL (defaults to `STATIC_WEBSITE_UPLOADER_URL` or `http://localhost:3000`). |
 | `authToken` | `string` | *Optional*. API Auth Token (defaults to `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN`). |
 
+#### `list_projects`
+Lists all published static website projects owned by the authenticated user.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `serverUrl` | `string` | *Optional*. Target uploader server URL. |
+| `authToken` | `string` | *Optional*. API Auth Token. |
+
 #### Example Agent Request
 > *"Create a responsive landing page in `./my-landing-page` and publish it using the static site uploader MCP server."*
+> *"List all my published projects using the MCP server."*
 
 ---
 

@@ -1,11 +1,23 @@
 import { list } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateUserSession } from '@/lib/session';
+import { validateUserSession, validateApiKeySignature } from '@/lib/session';
+
+function getUsername(request: NextRequest): string | null {
+  const authHeader = request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const keyInfo = validateApiKeySignature(token);
+    if (keyInfo) {
+      return keyInfo.username;
+    }
+  }
+  const cookieValue = request.cookies.get('auth_session')?.value;
+  return validateUserSession(cookieValue);
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieValue = request.cookies.get('auth_session')?.value;
-    const username = validateUserSession(cookieValue);
+    const username = getUsername(request);
 
     if (!username) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
