@@ -16,15 +16,15 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 /**
- * Interface for the publish tool input arguments
+ * Interface for the publish_site tool input arguments
  */
-interface PublishToolArgs {
+interface PublishSiteToolArgs {
   directoryPath: string;
   serverUrl?: string;
   authToken?: string;
 }
 
-function isPublishToolArgs(args: any): args is PublishToolArgs {
+function isPublishSiteToolArgs(args: any): args is PublishSiteToolArgs {
   return (
     args &&
     typeof args === "object" &&
@@ -35,14 +35,14 @@ function isPublishToolArgs(args: any): args is PublishToolArgs {
 }
 
 /**
- * Interface for the list projects tool input arguments
+ * Interface for the list_sites tool input arguments
  */
-interface ListProjectsToolArgs {
+interface ListSitesToolArgs {
   serverUrl?: string;
   authToken?: string;
 }
 
-function isListProjectsToolArgs(args: any): args is ListProjectsToolArgs {
+function isListSitesToolArgs(args: any): args is ListSitesToolArgs {
   return (
     !args ||
     typeof args !== "object" ||
@@ -90,7 +90,7 @@ class MCPUploaderServer {
     this.server = new Server(
       {
         name: "@yhauxell/static-site-mcp-server",
-        version: "1.1.0",
+        version: "1.2.0",
       },
       {
         capabilities: {
@@ -115,7 +115,7 @@ class MCPUploaderServer {
       return {
         tools: [
           {
-            name: "publish_static_site",
+            name: "publish_site",
             description:
               "Publishes a local directory containing a static website (with index.html at root) to the web uploader service.",
             inputSchema: {
@@ -141,9 +141,9 @@ class MCPUploaderServer {
             },
           },
           {
-            name: "list_projects",
+            name: "list_sites",
             description:
-              "Lists all published static website projects owned by the authenticated user.",
+              "Lists all published static websites owned by the authenticated user.",
             inputSchema: {
               type: "object",
               properties: {
@@ -168,10 +168,10 @@ class MCPUploaderServer {
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const toolName = request.params.name;
 
-      if (toolName === "publish_static_site") {
-        return this.handlePublishStaticSite(request.params.arguments);
-      } else if (toolName === "list_projects") {
-        return this.handleListProjects(request.params.arguments);
+      if (toolName === "publish_site" || toolName === "publish_static_site") {
+        return this.handlePublishSite(request.params.arguments);
+      } else if (toolName === "list_sites" || toolName === "list_projects") {
+        return this.handleListSites(request.params.arguments);
       } else {
         throw new McpError(
           ErrorCode.MethodNotFound,
@@ -181,11 +181,11 @@ class MCPUploaderServer {
     });
   }
 
-  private async handlePublishStaticSite(args: any) {
-    if (!isPublishToolArgs(args)) {
+  private async handlePublishSite(args: any) {
+    if (!isPublishSiteToolArgs(args)) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        "Invalid arguments for publish_static_site."
+        "Invalid arguments for publish_site."
       );
     }
 
@@ -344,11 +344,11 @@ class MCPUploaderServer {
     }
   }
 
-  private async handleListProjects(args: any) {
-    if (!isListProjectsToolArgs(args)) {
+  private async handleListSites(args: any) {
+    if (!isListSitesToolArgs(args)) {
       throw new McpError(
         ErrorCode.InvalidParams,
-        "Invalid arguments for list_projects."
+        "Invalid arguments for list_sites."
       );
     }
 
@@ -370,7 +370,7 @@ class MCPUploaderServer {
           content: [
             {
               type: "text",
-              text: "Error: Auth Token is required to list projects. Please provide the 'authToken' argument or set the STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+              text: "Error: Auth Token is required to list sites. Please provide the 'authToken' argument or set the STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
             },
           ],
           isError: true,
@@ -378,7 +378,7 @@ class MCPUploaderServer {
       }
 
       const listEndpoint = `${targetServerUrl.replace(/\/+$/, "")}/api/user/projects`;
-      console.error(`Fetching user projects from ${listEndpoint}...`);
+      console.error(`Fetching user sites from ${listEndpoint}...`);
 
       const response = await fetch(listEndpoint, {
         method: "GET",
@@ -396,7 +396,7 @@ class MCPUploaderServer {
           content: [
             {
               type: "text",
-              text: `Failed to list projects. Server responded with status ${response.status} but invalid JSON: ${responseText.substring(0, 500)}`,
+              text: `Failed to list sites. Server responded with status ${response.status} but invalid JSON: ${responseText.substring(0, 500)}`,
             },
           ],
           isError: true,
@@ -409,7 +409,7 @@ class MCPUploaderServer {
           content: [
             {
               type: "text",
-              text: `Failed to list projects (${response.status}): ${errorMsg}`,
+              text: `Failed to list sites (${response.status}): ${errorMsg}`,
             },
           ],
           isError: true,
@@ -422,19 +422,19 @@ class MCPUploaderServer {
           content: [
             {
               type: "text",
-              text: "No published projects found for this account.",
+              text: "No published sites found for this account.",
             },
           ],
         };
       }
 
-      let markdownOutput = `### 📁 Published Projects (${projects.length})\n\n`;
+      let markdownOutput = `### 📁 Published Sites (${projects.length})\n\n`;
       for (const proj of projects) {
         const liveUrl = `${targetServerUrl.replace(/\/+$/, "")}/${proj.projectId}`;
         const dateStr = proj.uploadDate
           ? new Date(proj.uploadDate).toLocaleString()
           : "Unknown date";
-        markdownOutput += `- **${proj.fileName || "Project"}** (\`${proj.projectId}\`)\n`;
+        markdownOutput += `- **${proj.fileName || "Site"}** (\`${proj.projectId}\`)\n`;
         markdownOutput += `  - **Live URL**: [${liveUrl}](${liveUrl})\n`;
         markdownOutput += `  - **Files**: ${proj.fileCount || (proj.files ? proj.files.length : "N/A")} files\n`;
         markdownOutput += `  - **Uploaded**: ${dateStr}\n\n`;
@@ -449,7 +449,7 @@ class MCPUploaderServer {
         ],
       };
     } catch (error: any) {
-      console.error("Error listing projects:", error);
+      console.error("Error listing sites:", error);
       return {
         content: [
           {

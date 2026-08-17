@@ -73,13 +73,13 @@ Add the server to your agent's MCP configuration (`mcp_config.json`):
 
 When connected, agents can execute the following MCP tools:
 
-#### `publish_static_site`
+#### `publish_site`
 Packs and deploys a local static website folder.
 - `directoryPath` (string, required): Path to local directory containing an `index.html` file.
 - `serverUrl` (string, optional): Target uploader server URL.
 - `authToken` (string, optional): Auth token for authorization.
 
-#### `list_projects`
+#### `list_sites`
 Lists all static website projects published by the authenticated user.
 - `serverUrl` (string, optional): Target uploader server URL.
 - `authToken` (string, optional): Auth token for authorization.

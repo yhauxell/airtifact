@@ -1,11 +1,11 @@
 # @yhauxell/static-site-mcp-server
 
-An official Model Context Protocol (MCP) server that enables AI coding assistants (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to deploy local static websites directly to the **Static Website Uploader** service via API, and manage/list user projects.
+An official Model Context Protocol (MCP) server that enables AI coding assistants (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to deploy local static websites directly to the **Static Website Uploader** service via API, and list user sites.
 
 ## Features
 
-- **`publish_static_site` Tool**: Automatically packs a local folder (must contain `index.html`), zips it in memory, and deploys it programmatically to your uploader backend.
-- **`list_projects` Tool**: Lists all static website projects published by the authenticated user along with file counts, upload dates, and live URLs.
+- **`publish_site` Tool**: Automatically packs a local folder (must contain `index.html`), zips it in memory, and deploys it programmatically to your uploader backend.
+- **`list_sites` Tool**: Lists all static websites published by the authenticated user along with file counts, upload dates, and live URLs.
 - **Smart Ignore Rules**: Excludes unnecessary folders (`.git`, `node_modules`, `.next`, `dist`) and hidden OS files (`.DS_Store`) during compression.
 - **Rich Markdown Output**: Returns shareable live URLs and secret project removal URLs directly formatted for the AI agent context.
 
@@ -41,7 +41,7 @@ To register this MCP server in your agentic workspace, add the configuration bel
 
 ## Tool API Reference
 
-### 1. `publish_static_site`
+### 1. `publish_site`
 
 Publishes a local directory containing a static website.
 
@@ -66,9 +66,9 @@ Publishes a local directory containing a static website.
 
 ---
 
-### 2. `list_projects`
+### 2. `list_sites`
 
-Lists all published static website projects owned by the authenticated user.
+Lists all published static websites owned by the authenticated user.
 
 #### Input Schema / Arguments
 
@@ -82,7 +82,7 @@ Lists all published static website projects owned by the authenticated user.
   "content": [
     {
       "type": "text",
-      "text": "### 📁 Published Projects (2)\n\n- **my-portfolio.zip** (`044a4449ae784808785e1bb0ca4df372`)\n  - **Live URL**: [http://localhost:3000/044a4449ae784808785e1bb0ca4df372](http://localhost:3000/044a4449ae784808785e1bb0ca4df372)\n  - **Files**: 3 files\n  - **Uploaded**: 8/17/2026, 12:00:00 PM"
+      "text": "### 📁 Published Sites (2)\n\n- **my-portfolio.zip** (`044a4449ae784808785e1bb0ca4df372`)\n  - **Live URL**: [http://localhost:3000/044a4449ae784808785e1bb0ca4df372](http://localhost:3000/044a4449ae784808785e1bb0ca4df372)\n  - **Files**: 3 files\n  - **Uploaded**: 8/17/2026, 12:00:00 PM"
     }
   ]
 }
@@ -94,11 +94,11 @@ Lists all published static website projects owned by the authenticated user.
 
 ### Prompting Your AI Assistant
 
-> *"List all my uploaded static websites using the `list_projects` tool."*
+> *"List all my uploaded static websites using the `list_sites` tool."*
 
 or
 
-> *"Build a single-page HTML portfolio in `./portfolio-site` and publish it using the `publish_static_site` tool."*
+> *"Build a single-page HTML portfolio in `./portfolio-site` and publish it using the `publish_site` tool."*
 
 ---
 
