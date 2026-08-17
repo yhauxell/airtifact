@@ -14,5 +14,14 @@ initBotId({
       path: '/api/projects/*/remove',
       method: 'DELETE',
     },
+    {
+      path: '/api/auth/login',
+      method: 'POST',
+    },
+    {
+      path: '/api/auth/signup',
+      method: 'POST',
+    },
   ],
 });
+
