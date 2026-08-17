@@ -43,12 +43,32 @@ Create a `.env.local` file and set:
 
 ```bash
 BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
-MANAGE_PASSWORD=your_admin_password
+SESSION_SECRET=your_session_secret
+ADMIN_PASSWORD_HASH=your_secure_password_hash
 # Optional, in bytes. Defaults to 5MB when unset.
 MAX_ANON_UPLOAD_SIZE_BYTES=5242880
 MAX_AUTH_UPLOAD_SIZE_BYTES=52428800
-ADMIN_PASSWORD_HASH=your_secure_password_hash
 ```
+
+#### Generating Admin Hash & Session Secret
+
+Run the helper script to generate `ADMIN_PASSWORD_HASH` and `SESSION_SECRET`:
+
+```bash
+node apps/web/generate-hash.js <your_admin_password>
+```
+
+#### Admin Password Hash Calculation
+
+- **Algorithm**: Key derivation via Node.js `crypto.scryptSync`.
+- **Salt**: 16 random bytes formatted as a hexadecimal string (`crypto.randomBytes(16).toString('hex')`).
+- **Scrypt Parameters**:
+  - Cost factor ($N$): `16384`
+  - Block size ($r$): `8`
+  - Parallelization ($p$): `1`
+  - Derived key length: 64 bytes
+- **Hash Format**: `${salt}:${derivedKey.toString('hex')}` stored in `ADMIN_PASSWORD_HASH`.
+- **Verification**: On authentication, the salt is extracted from the hash, `scryptSync` computes the derived key from the provided password, and constant-time comparison (`crypto.timingSafeEqual`) checks it against the stored key.
 
 ### 4) Run the development server
 

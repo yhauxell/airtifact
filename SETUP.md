@@ -214,9 +214,10 @@ Remove a project and all files (requires `x-manage-password`, BotID protected)
 
 ### Admin Authentication
 - `/admin` is password protected
-- Password checks are server-side and matched against `MANAGE_PASSWORD`
+- Admin passwords are verified server-side against `ADMIN_PASSWORD_HASH` using `scryptSync` (cost: 16384, block size: 8, parallelization: 1) and constant-time comparison (`crypto.timingSafeEqual`)
+- Hashes and session secrets can be generated using `node apps/web/generate-hash.js <password>`
 - There is no default fallback password
-- Vercel BotID protects admin authentication and project deletion requests
+- Vercel BotID protects admin authentication, user login/signup, and project deletion requests
 
 ## Limitations & Considerations
 
