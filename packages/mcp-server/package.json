@@ -1,10 +1,14 @@
 {
   "name": "@yhauxell/static-site-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publishConfig": {
     "access": "public"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "main": "dist/index.js",
   "bin": {
     "static-site-mcp-server": "./dist/index.js"
