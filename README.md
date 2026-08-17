@@ -2,7 +2,7 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fstatic-website-uploader)
 
-Upload a ZIP file containing a static website and instantly get a private share link.
+Upload a ZIP file containing a static website and instantly get a private share link. Comes with an official Model Context Protocol (MCP) server for seamless AI agent deployments.
 
 ## Live Demo
 
@@ -10,17 +10,64 @@ Upload a ZIP file containing a static website and instantly get a private share 
 
 ## Features
 
-- Drag-and-drop ZIP upload UI
-- Project links using secure random IDs
-- Static asset hosting through Vercel Blob
-- Password-protected admin dashboard for project management
-- Self-service project removal with a secret delete link and token
+- **Drag-and-drop ZIP upload UI**: Beautiful interface for instant web uploads.
+- **🤖 AI Agent MCP Integration**: Official Model Context Protocol (`@yhauxell/static-site-mcp-server`) server for agentic environments to deploy static site artifacts via API.
+- **Secure random IDs**: Project links generated using cryptographically secure random IDs.
+- **Vercel Blob storage**: High-performance static asset hosting.
+- **User Accounts & Auth Tokens**: Programmatic API keys / Auth Tokens for authenticated CLI & MCP uploads.
+- **Admin dashboard**: Password-protected dashboard for managing projects and user accounts.
+- **Self-service removal**: Delete token URLs for easy project removal.
 
-## Tech Stack
+## Repository Structure (Monorepo)
 
-- Next.js
-- TypeScript
-- Vercel Blob
+This repository is structured as a `pnpm` monorepo:
+
+- **`apps/web`**: Next.js 16 web application and upload REST API.
+- **`packages/mcp-server`** (`@yhauxell/static-site-mcp-server`): Model Context Protocol server enabling AI coding agents to deploy static sites directly from their workspace.
+
+---
+
+## 🤖 AI Agent MCP Integration
+
+Plug the `@yhauxell/static-site-mcp-server` into your agentic tools (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to allow AI agents to deploy local static websites directly to your uploader backend.
+
+### Quick Start with `npx`
+
+Add the MCP server to your environment's `mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "static-site-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@yhauxell/static-site-mcp-server"
+      ],
+      "env": {
+        "STATIC_WEBSITE_UPLOADER_URL": "https://staticmarkup.vercel.app",
+        "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "your_auth_token_here"
+      }
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+#### `publish_static_site`
+Packs a local directory (must contain `index.html` at root), zips it in memory, and publishes it via API.
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `directoryPath` | `string` | **Required**. Absolute path to the directory containing static site files. |
+| `serverUrl` | `string` | *Optional*. Target uploader server URL (defaults to `STATIC_WEBSITE_UPLOADER_URL` or `http://localhost:3000`). |
+| `authToken` | `string` | *Optional*. API Auth Token (defaults to `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN`). |
+
+#### Example Agent Request
+> *"Create a responsive landing page in `./my-landing-page` and publish it using the static site uploader MCP server."*
+
+---
 
 ## Getting Started
 
@@ -34,18 +81,18 @@ cd static-website-uploader
 ### 2) Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 3) Configure environment variables
 
-Create a `.env.local` file and set:
+Create `apps/web/.env.local` and set:
 
 ```bash
 BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
 SESSION_SECRET=your_session_secret
 ADMIN_PASSWORD_HASH=your_secure_password_hash
-# Optional, in bytes. Defaults to 5MB when unset.
+# Optional, in bytes. Defaults to 5MB anon / 50MB auth when unset.
 MAX_ANON_UPLOAD_SIZE_BYTES=5242880
 MAX_AUTH_UPLOAD_SIZE_BYTES=52428800
 ```
@@ -58,38 +105,41 @@ Run the helper script to generate `ADMIN_PASSWORD_HASH` and `SESSION_SECRET`:
 node apps/web/generate-hash.js <your_admin_password>
 ```
 
-#### Admin Password Hash Calculation
+### 4) Run the development servers
 
-- **Algorithm**: Key derivation via Node.js `crypto.scryptSync`.
-- **Salt**: 16 random bytes formatted as a hexadecimal string (`crypto.randomBytes(16).toString('hex')`).
-- **Scrypt Parameters**:
-  - Cost factor ($N$): `16384`
-  - Block size ($r$): `8`
-  - Parallelization ($p$): `1`
-  - Derived key length: 64 bytes
-- **Hash Format**: `${salt}:${derivedKey.toString('hex')}` stored in `ADMIN_PASSWORD_HASH`.
-- **Verification**: On authentication, the salt is extracted from the hash, `scryptSync` computes the derived key from the provided password, and constant-time comparison (`crypto.timingSafeEqual`) checks it against the stored key.
+- **Web Application**:
+  ```bash
+  pnpm dev:web
+  ```
+  Open http://localhost:3000 in your browser.
 
-### 4) Run the development server
+- **MCP Server**:
+  ```bash
+  pnpm build:mcp
+  ```
 
-```bash
-npm run dev
-```
-
-Open http://localhost:3000 in your browser.
+---
 
 ## Build for Production
 
 ```bash
-npm run build
-npm run start
+# Build the Next.js web application
+pnpm build:web
+
+# Build the MCP server package
+pnpm build:mcp
 ```
+
+---
 
 ## Deployment & Setup
 
-For full deployment details, architecture notes, and troubleshooting, see:
+For full deployment details, architecture notes, and MCP troubleshooting, see:
 
 - [SETUP.md](SETUP.md)
+- [packages/mcp-server/README.md](packages/mcp-server/README.md)
+
+---
 
 ## Contributing
 
