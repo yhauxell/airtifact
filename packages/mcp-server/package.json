@@ -5,6 +5,10 @@
     "access": "public"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "main": "dist/index.js",
   "bin": {
     "static-site-mcp-server": "./dist/index.js"
