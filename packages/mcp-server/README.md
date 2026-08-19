@@ -27,15 +27,15 @@ To register this MCP server in your agentic workspace, add the configuration bel
         "@airtifact/mcp"
       ],
       "env": {
-        "STATIC_WEBSITE_UPLOADER_URL": "https://airtifact.page",
-        "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "sk_your_generated_auth_token"
+        "AIRTIFACT_URL": "https://airtifact.page",
+        "AIRTIFACT_AUTH_TOKEN": "sk_your_generated_auth_token"
       }
     }
   }
 }
 ```
 
-*Note: Replace `STATIC_WEBSITE_UPLOADER_URL` with your target server URL and `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN` with your auth token.*
+*Note: Replace `AIRTIFACT_URL` with your target server URL and `AIRTIFACT_AUTH_TOKEN` with your auth token.*
 
 ---
 
@@ -48,8 +48,8 @@ Publishes a local directory containing a static website.
 #### Input Schema / Arguments
 
 - `directoryPath` (string, **required**): Absolute path to the local directory containing the static website files (must contain `index.html` at the root).
-- `serverUrl` (string, *optional*): Target uploader server URL (e.g. `http://localhost:3000` or your Vercel deployment URL). Overrides the `STATIC_WEBSITE_UPLOADER_URL` environment variable.
-- `authToken` (string, *optional*): Auth token for authorization (`sk_username.version.signature`). Overrides the `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN` environment variable.
+- `serverUrl` (string, *optional*): Target server URL (e.g. `https://airtifact.page` or `http://localhost:3000`). Overrides the `AIRTIFACT_URL` environment variable.
+- `authToken` (string, *optional*): Auth token for authorization (`sk_username.version.signature`). Overrides the `AIRTIFACT_AUTH_TOKEN` environment variable.
 
 #### Success Response Example
 
@@ -58,7 +58,7 @@ Publishes a local directory containing a static website.
   "content": [
     {
       "type": "text",
-      "text": "### 🎉 Website Published Successfully!\n\n- **Project ID**: `044a4449ae784808785e1bb0ca4df372`\n- **Files Packed**: 3 files\n- **Shareable Live URL**: [http://localhost:3000/044a4449ae784808785e1bb0ca4df372](http://localhost:3000/044a4449ae784808785e1bb0ca4df372)\n- **Removal URL**: [http://localhost:3000/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a](http://localhost:3000/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a)\n\n*Make sure to save the Removal URL or the delete token (`aa166a`) if you want to delete this project later.*"
+      "text": "### 🎉 Website Published Successfully!\n\n- **Project ID**: `044a4449ae784808785e1bb0ca4df372`\n- **Files Packed**: 3 files\n- **Shareable Live URL**: [https://airtifact.page/044a4449ae784808785e1bb0ca4df372](https://airtifact.page/044a4449ae784808785e1bb0ca4df372)\n- **Removal URL**: [https://airtifact.page/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a](https://airtifact.page/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a)\n\n*Make sure to save the Removal URL or the delete token (`aa166a`) if you want to delete this project later.*"
     }
   ]
 }
@@ -72,8 +72,8 @@ Lists all published static websites owned by the authenticated user.
 
 #### Input Schema / Arguments
 
-- `serverUrl` (string, *optional*): Target uploader server URL. Overrides `STATIC_WEBSITE_UPLOADER_URL`.
-- `authToken` (string, *optional*): Auth token for authorization. Overrides `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN`.
+- `serverUrl` (string, *optional*): Target server URL. Overrides `AIRTIFACT_URL`.
+- `authToken` (string, *optional*): Auth token for authorization. Overrides `AIRTIFACT_AUTH_TOKEN`.
 
 #### Success Response Example
 
@@ -82,7 +82,7 @@ Lists all published static websites owned by the authenticated user.
   "content": [
     {
       "type": "text",
-      "text": "### 📁 Published Sites (2)\n\n- **my-portfolio.zip** (`044a4449ae784808785e1bb0ca4df372`)\n  - **Live URL**: [http://localhost:3000/044a4449ae784808785e1bb0ca4df372](http://localhost:3000/044a4449ae784808785e1bb0ca4df372)\n  - **Files**: 3 files\n  - **Uploaded**: 8/17/2026, 12:00:00 PM"
+      "text": "### 📁 Published Sites (2)\n\n- **my-portfolio.zip** (`044a4449ae784808785e1bb0ca4df372`)\n  - **Live URL**: [https://airtifact.page/044a4449ae784808785e1bb0ca4df372](https://airtifact.page/044a4449ae784808785e1bb0ca4df372)\n  - **Files**: 3 files\n  - **Uploaded**: 8/17/2026, 12:00:00 PM"
     }
   ]
 }
@@ -108,7 +108,7 @@ If building from the workspace source:
 
 ```bash
 # Build the MCP server package
-pnpm --filter @yhauxell/static-site-mcp-server build
+pnpm build:mcp
 ```
 
 This compiles TypeScript source into executable ES Modules under `dist/index.js`.

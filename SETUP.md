@@ -159,9 +159,9 @@ static-website-uploader/
 │       ├── generate-hash.js              # Admin credential helper
 │       └── package.json
 └── packages/
-    └── mcp-server/                       # @yhauxell/static-site-mcp-server
+    └── mcp-server/                       # @airtifact/mcp
         ├── src/
-        │   └── index.ts                  # MCP server & publish_static_site tool
+        │   └── index.ts                  # MCP server, publish_site & list_sites tools
         ├── README.md                     # MCP package docs
         └── package.json
 ```

@@ -45,8 +45,8 @@ Add the MCP server to your environment's `mcp_config.json`:
         "@airtifact/mcp"
       ],
       "env": {
-        "STATIC_WEBSITE_UPLOADER_URL": "https://airtifact.page",
-        "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "your_auth_token_here"
+        "AIRTIFACT_URL": "https://airtifact.page",
+        "AIRTIFACT_AUTH_TOKEN": "your_auth_token_here"
       }
     }
   }
@@ -61,16 +61,16 @@ Packs a local directory (must contain `index.html` at root), zips it in memory, 
 | Parameter | Type | Description |
 | --- | --- | --- |
 | `directoryPath` | `string` | **Required**. Absolute path to the directory containing static site files. |
-| `serverUrl` | `string` | *Optional*. Target uploader server URL (defaults to `STATIC_WEBSITE_UPLOADER_URL` or `http://localhost:3000`). |
-| `authToken` | `string` | *Optional*. API Auth Token (defaults to `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN`). |
+| `serverUrl` | `string` | *Optional*. Target server URL (defaults to `AIRTIFACT_URL` or `https://airtifact.page`). |
+| `authToken` | `string` | *Optional*. API Auth Token (defaults to `AIRTIFACT_AUTH_TOKEN`). |
 
 #### `list_sites`
 Lists all published static websites owned by the authenticated user.
 
 | Parameter | Type | Description |
 | --- | --- | --- |
-| `serverUrl` | `string` | *Optional*. Target uploader server URL. |
-| `authToken` | `string` | *Optional*. API Auth Token. |
+| `serverUrl` | `string` | *Optional*. Target server URL (defaults to `AIRTIFACT_URL` or `https://airtifact.page`). |
+| `authToken` | `string` | *Optional*. API Auth Token (defaults to `AIRTIFACT_AUTH_TOKEN`). |
 
 #### Example Agent Request
 > *"Create a responsive landing page in `./my-landing-page` and publish it using `publish_site`."*

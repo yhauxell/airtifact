@@ -1,6 +1,6 @@
 # ⚡ Features & Capabilities
 
-This document outlines the current capabilities and feature set of **static-website-uploader**.
+This document outlines the current capabilities and feature set of **Airtifact**.
 
 ---
 
@@ -17,7 +17,7 @@ This document outlines the current capabilities and feature set of **static-webs
 - **`list_sites` Tool**:
   - Allows agents to query and inspect all static websites published under the user's account with live links and upload timestamps.
 - **Configurable Connection Options**:
-  - Supports environment variables (`STATIC_WEBSITE_UPLOADER_URL`, `STATIC_WEBSITE_UPLOADER_AUTH_TOKEN`) or explicit per-tool-call parameters.
+  - Supports environment variables (`AIRTIFACT_URL`, `AIRTIFACT_AUTH_TOKEN`) or explicit per-tool-call parameters.
 
 ---
 

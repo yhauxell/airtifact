@@ -28,8 +28,8 @@ const snippets: Record<SnippetTab, string> = {
       "command": "npx",
       "args": ["-y", "@airtifact/mcp"],
       "env": {
-        "STATIC_WEBSITE_UPLOADER_URL": "https://airtifact.page",
-        "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "YOUR_API_AUTH_TOKEN"
+        "AIRTIFACT_URL": "https://airtifact.page",
+        "AIRTIFACT_AUTH_TOKEN": "YOUR_API_AUTH_TOKEN"
       }
     }
   }
