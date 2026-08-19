@@ -236,11 +236,14 @@ class MCPUploaderServer {
       // 3. Resolve API URL and Key
       const targetServerUrl =
         serverUrl ||
+        process.env.AIRTIFACT_URL ||
         process.env.STATIC_WEBSITE_UPLOADER_URL ||
-        "http://localhost:3000";
+        "https://airtifact.page";
 
       const targetAuthToken =
         authToken ||
+        process.env.AIRTIFACT_AUTH_TOKEN ||
+        process.env.AIRTIFACT_API_KEY ||
         process.env.STATIC_WEBSITE_UPLOADER_AUTH_TOKEN ||
         process.env.STATIC_WEBSITE_UPLOADER_API_KEY;
 
@@ -357,11 +360,14 @@ class MCPUploaderServer {
 
       const targetServerUrl =
         serverUrl ||
+        process.env.AIRTIFACT_URL ||
         process.env.STATIC_WEBSITE_UPLOADER_URL ||
-        "http://localhost:3000";
+        "https://airtifact.page";
 
       const targetAuthToken =
         authToken ||
+        process.env.AIRTIFACT_AUTH_TOKEN ||
+        process.env.AIRTIFACT_API_KEY ||
         process.env.STATIC_WEBSITE_UPLOADER_AUTH_TOKEN ||
         process.env.STATIC_WEBSITE_UPLOADER_API_KEY;
 
