@@ -2,7 +2,7 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fstatic-website-uploader)
 
-Upload a ZIP file containing a static website and instantly get a private share link. Comes with an official Model Context Protocol (MCP) server for seamless AI agent deployments.
+The universal, open-source deployment layer and artifact preview hub for AI coding agents. Upload static sites via drag-and-drop or let AI assistants (Cursor, Claude Code, Windsurf, Antigravity) deploy live preview links directly from their workspace via Model Context Protocol (MCP).
 
 ## Live Demo
 
@@ -146,6 +146,9 @@ pnpm build:mcp
 For full deployment details, architecture notes, and MCP troubleshooting, see:
 
 - [SETUP.md](SETUP.md)
+- [FEATURES.md](FEATURES.md)
+- [ROADMAP.md](ROADMAP.md)
+- [AGENT.md](AGENT.md)
 - [packages/mcp-server/README.md](packages/mcp-server/README.md)
 
 ---
