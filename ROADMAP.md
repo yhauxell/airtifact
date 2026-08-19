@@ -43,8 +43,9 @@ Focus: Enabling agents to "see" and verify their deployments before presenting t
   - Capture rendered page screenshots upon deployment and return preview image metadata in the tool response.
 - [ ] **Basic Health & Console Check**:
   - Detect runtime JavaScript errors or missing assets (`404`s) during deployment and return actionable error logs directly into the agent's context.
-- [ ] **Custom Slug & Project Aliasing (`alias`)**:
-  - Allow agents to assign readable preview aliases (e.g., `preview-landing-v2`).
+- [ ] **Custom Slug, Project Aliasing & Wildcard Subdomains (`*.airtifact.page`)**:
+  - **Zero-Config Wildcard Subdomain Routing**: Automatically map project IDs and custom aliases to direct subdomains (e.g., `https://<alias>.airtifact.page` or `https://<projectId>.airtifact.page`) via Next.js Middleware edge routing and wildcard DNS without requiring API calls.
+  - **Programmatic Custom 3rd-Party Domains**: Allow agents and developers to attach custom external domains (e.g. `preview.mycompany.com`) via programmatic Vercel Domains API integration with automatic SSL provisioning.
 
 ---
 
