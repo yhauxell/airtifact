@@ -89,8 +89,8 @@ class MCPUploaderServer {
   constructor() {
     this.server = new Server(
       {
-        name: "@yhauxell/static-site-mcp-server",
-        version: "1.0.1",
+        name: "@airtifact/mcp",
+        version: "1.0.0",
       },
       {
         capabilities: {

@@ -1,6 +1,6 @@
-# @yhauxell/static-site-mcp-server
+# @airtifact/mcp
 
-An official Model Context Protocol (MCP) server that enables AI coding assistants (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to deploy local static websites directly to the **Static Website Uploader** service via API, and list user sites.
+An official Model Context Protocol (MCP) server that enables AI coding assistants (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to deploy local static websites and preview artifacts directly to the **Airtifact** (`airtifact.page`) service via API, and list user sites.
 
 ## Features
 
@@ -20,14 +20,14 @@ To register this MCP server in your agentic workspace, add the configuration bel
 ```json
 {
   "mcpServers": {
-    "static-site-mcp-server": {
+    "airtifact": {
       "command": "npx",
       "args": [
         "-y",
-        "@yhauxell/static-site-mcp-server"
+        "@airtifact/mcp"
       ],
       "env": {
-        "STATIC_WEBSITE_UPLOADER_URL": "https://staticmarkup.vercel.app",
+        "STATIC_WEBSITE_UPLOADER_URL": "https://airtifact.page",
         "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "sk_your_generated_auth_token"
       }
     }

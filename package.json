@@ -1,13 +1,13 @@
 {
-  "name": "static-website-uploader-monorepo",
+  "name": "airtifact-monorepo",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev:web": "pnpm --filter web dev",
     "build:web": "pnpm --filter web build",
     "start:web": "pnpm --filter web start",
-    "build:mcp": "pnpm --filter @yhauxell/static-site-mcp-server build",
-    "start:mcp": "pnpm --filter @yhauxell/static-site-mcp-server start",
+    "build:mcp": "pnpm --filter @airtifact/mcp build",
+    "start:mcp": "pnpm --filter @airtifact/mcp start",
     "lint:web": "pnpm --filter web lint"
   }
 }

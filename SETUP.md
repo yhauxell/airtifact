@@ -1,11 +1,11 @@
-# ZIP HTML Uploader - Setup & Deployment Guide
+# Airtifact - Setup & Deployment Guide
 
-A super simple Next.js app that lets you upload ZIP files containing HTML sites and share them via private URLs, plus an official Model Context Protocol (MCP) server for AI agent integrations.
+The universal, open-source deployment layer and artifact preview hub for AI coding agents. Upload ZIP files containing static sites or deploy directly via the official Model Context Protocol (MCP) server.
 
 ## Features
 
 ✅ **Drag-and-drop ZIP upload** - Beautiful UI with shadcn styling  
-✅ **🤖 AI Agent Integration (MCP)** - Official `@yhauxell/static-site-mcp-server` package for AI agents to publish static sites directly via API  
+✅ **🤖 AI Agent Integration (MCP)** - Official `@airtifact/mcp` package for AI agents to publish static sites directly via API  
 ✅ **Cryptographically secure private IDs** - Random 32-char hex IDs (impossible to guess)  
 ✅ **Vercel Blob storage** - Files stored as public blobs, accessible via project page or API  
 ✅ **Shareable links** - Get instant URLs to share with anyone  

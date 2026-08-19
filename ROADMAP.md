@@ -15,7 +15,7 @@ This document outlines the strategic roadmap to establish **static-website-uploa
 
 Focus: Streamlining agent interactions and eliminating friction during autonomous tool use.
 
-- [x] **Model Context Protocol (MCP) Server**: Official `@yhauxell/static-site-mcp-server` package supporting stdio transport.
+- [x] **Model Context Protocol (MCP) Server**: Official `@airtifact/mcp` package supporting stdio transport.
 - [x] **`publish_site` & `list_sites` MCP Tools**: Directory packing and publishing directly from local agent workspaces.
 - [ ] **Single File / In-Memory Deployments (`publish_html` & `publish_files`)**:
   - Allow agents to publish single HTML files or in-memory file trees directly without needing to create directory/ZIP structures on disk.

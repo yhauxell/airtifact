@@ -1,6 +1,6 @@
-# static-website-uploader
+# airtifact
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fstatic-website-uploader)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fairtifact)
 
 The universal, open-source deployment layer and artifact preview hub for AI coding agents. Upload static sites via drag-and-drop or let AI assistants (Cursor, Claude Code, Windsurf, Antigravity) deploy live preview links directly from their workspace via Model Context Protocol (MCP).
 
@@ -11,7 +11,7 @@ The universal, open-source deployment layer and artifact preview hub for AI codi
 ## Features
 
 - **Drag-and-drop ZIP upload UI**: Beautiful interface for instant web uploads.
-- **🤖 AI Agent MCP Integration**: Official Model Context Protocol (`@yhauxell/static-site-mcp-server`) server for agentic environments to deploy static site artifacts via API.
+- **🤖 AI Agent MCP Integration**: Official Model Context Protocol (`@airtifact/mcp`) server for agentic environments to deploy static site artifacts via API.
 - **Secure random IDs**: Project links generated using cryptographically secure random IDs.
 - **Vercel Blob storage**: High-performance static asset hosting.
 - **User Accounts & Auth Tokens**: Programmatic API keys / Auth Tokens for authenticated CLI & MCP uploads.
@@ -23,13 +23,13 @@ The universal, open-source deployment layer and artifact preview hub for AI codi
 This repository is structured as a `pnpm` monorepo:
 
 - **`apps/web`**: Next.js 16 web application and upload REST API.
-- **`packages/mcp-server`** (`@yhauxell/static-site-mcp-server`): Model Context Protocol server enabling AI coding agents to deploy static sites directly from their workspace.
+- **`packages/mcp-server`** (`@airtifact/mcp`): Model Context Protocol server enabling AI coding agents to deploy static sites directly from their workspace.
 
 ---
 
 ## 🤖 AI Agent MCP Integration
 
-Plug the `@yhauxell/static-site-mcp-server` into your agentic tools (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to allow AI agents to deploy local static websites directly to your uploader backend.
+Plug the `@airtifact/mcp` into your agentic tools (Claude Desktop, Cursor, Antigravity, Windsurf, etc.) to allow AI agents to deploy local static websites directly to your uploader backend.
 
 ### Quick Start with `npx`
 
@@ -38,14 +38,14 @@ Add the MCP server to your environment's `mcp_config.json`:
 ```json
 {
   "mcpServers": {
-    "static-site-mcp-server": {
+    "airtifact": {
       "command": "npx",
       "args": [
         "-y",
-        "@yhauxell/static-site-mcp-server"
+        "@airtifact/mcp"
       ],
       "env": {
-        "STATIC_WEBSITE_UPLOADER_URL": "https://staticmarkup.vercel.app",
+        "STATIC_WEBSITE_UPLOADER_URL": "https://airtifact.page",
         "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "your_auth_token_here"
       }
     }
@@ -83,8 +83,8 @@ Lists all published static websites owned by the authenticated user.
 ### 1) Clone the repository
 
 ```bash
-git clone https://github.com/yhauxell/static-website-uploader.git
-cd static-website-uploader
+git clone https://github.com/yhauxell/airtifact.git
+cd airtifact
 ```
 
 ### 2) Install dependencies

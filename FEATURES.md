@@ -6,9 +6,9 @@ This document outlines the current capabilities and feature set of **static-webs
 
 ## 🤖 1. AI Agent & Model Context Protocol (MCP)
 
-- **Official MCP Server (`@yhauxell/static-site-mcp-server`)**:
+- **Official MCP Server (`@airtifact/mcp`)**:
   - Out-of-the-box support for AI agents (Cursor, Claude Code, Antigravity, Windsurf, Claude Desktop, etc.).
-  - Runs locally via `npx @yhauxell/static-site-mcp-server` over standard JSON-RPC (`stdio`).
+  - Runs locally via `npx @airtifact/mcp` over standard JSON-RPC (`stdio`).
 - **`publish_site` Tool**:
   - Accepts an absolute local directory path containing static files (with an `index.html` at root).
   - Automatically filters out bulky/unnecessary files (`.git`, `node_modules`, `.next`, `dist`, `.DS_Store`, hidden files).
