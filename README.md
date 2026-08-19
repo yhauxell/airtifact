@@ -6,7 +6,7 @@ The universal, open-source deployment layer and artifact preview hub for AI codi
 
 ## Live Demo
 
-🔗 https://staticmarkup.vercel.app/
+🔗 https://airtifact.page/
 
 ## Features
 
