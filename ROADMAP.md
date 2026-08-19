@@ -24,6 +24,10 @@ Focus: Streamlining agent interactions and eliminating friction during autonomou
   - Automated cleanup to reduce storage clutter from rapid agent explorations and scratchpad mockups.
 - [ ] **Site Revision & Updates (`update_site`)**:
   - Enable agents to update an existing `projectId` over iterative prompting loops rather than generating new URLs every turn.
+- [ ] **Native Markdown Engine & Document Rendering (`publish_markdown` & `.md` pages)**:
+  - **Zero-Build Markdown Publishing**: Upload single `.md` files or folders of Markdown documents without requiring manual HTML/static site generation builds.
+  - **Next.js Server-Side Markdown Pipeline**: Beautifully renders GitHub Flavored Markdown (GFM), syntax-highlighted code blocks, LaTeX/math expressions (`KaTeX`), and Mermaid diagrams directly into styled HTML pages.
+  - **Multi-Document Docset / Knowledge-Base Mode**: Automatic table-of-contents, navigation sidebar, and nested route resolution for multi-file Markdown documentation projects.
 - [ ] **Agent-Aware Content Negotiation (`/` & `llms.txt`)**:
   - **Human User-Agent**: Serves the visual drag-and-drop web UI with real-time preview iframes.
   - **AI Agent / CLI User-Agent** (or `Accept: text/markdown` / `application/json`): Automatically serves a token-efficient, concise markdown spec containing MCP installation commands (`@airtifact/mcp`), API integration snippets (cURL/Node/Python), and endpoint schemas—bypassing unnecessary HTML/CSS/JS rendering.
