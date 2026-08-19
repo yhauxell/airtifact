@@ -78,6 +78,81 @@ Lists all published static websites owned by the authenticated user.
 
 ---
 
+## ⚡ REST API & Programmatic Uploads
+
+Deploy static sites from any script, CI/CD pipeline, or custom agent framework using the REST API.
+
+### `POST /api/upload`
+
+Upload a ZIP archive containing `index.html` at its root.
+
+#### Headers
+- `Authorization: Bearer <API_AUTH_TOKEN>` (required for programmatic uploads)
+- `Content-Type: multipart/form-data`
+
+#### Form Data
+- `file`: The `.zip` file archive.
+
+---
+
+### Code Snippets
+
+#### 1. cURL
+```bash
+curl -X POST https://airtifact.page/api/upload \
+  -H "Authorization: Bearer YOUR_API_AUTH_TOKEN" \
+  -F "file=@./build.zip"
+```
+
+#### 2. JavaScript / Node.js
+```javascript
+import fs from 'node:fs';
+
+const fileBuffer = fs.readFileSync('./build.zip');
+const formData = new FormData();
+formData.append('file', new Blob([fileBuffer]), 'build.zip');
+
+const res = await fetch('https://airtifact.page/api/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_AUTH_TOKEN',
+  },
+  body: formData,
+});
+
+const data = await res.json();
+console.log('Share URL:', data.shareUrl);
+console.log('Project ID:', data.projectId);
+```
+
+#### 3. Python
+```python
+import requests
+
+with open('build.zip', 'rb') as f:
+    res = requests.post(
+        'https://airtifact.page/api/upload',
+        headers={'Authorization': 'Bearer YOUR_API_AUTH_TOKEN'},
+        files={'file': ('build.zip', f, 'application/zip')}
+    )
+
+data = res.json()
+print(f"Live URL: {data['shareUrl']}")
+```
+
+#### API Response Example
+```json
+{
+  "projectId": "044a4449ae784808785e1bb0ca4df372",
+  "shareUrl": "/044a4449ae784808785e1bb0ca4df372",
+  "removeUrl": "/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a",
+  "deleteToken": "aa166a",
+  "files": ["index.html", "style.css", "script.js"]
+}
+```
+
+---
+
 ## Getting Started
 
 ### 1) Clone the repository

@@ -17,7 +17,50 @@ interface UploadResponse {
 
 const COPY_RESET_DELAY_MS = 2000;
 
-type CopyField = 'share' | 'remove' | 'token';
+type CopyField = 'share' | 'remove' | 'token' | 'snippet';
+type SnippetTab = 'mcp' | 'curl' | 'js' | 'python';
+
+const snippets: Record<SnippetTab, string> = {
+  mcp: `// Add to mcp_config.json
+{
+  "mcpServers": {
+    "airtifact": {
+      "command": "npx",
+      "args": ["-y", "@airtifact/mcp"],
+      "env": {
+        "STATIC_WEBSITE_UPLOADER_URL": "https://airtifact.page",
+        "STATIC_WEBSITE_UPLOADER_AUTH_TOKEN": "YOUR_API_AUTH_TOKEN"
+      }
+    }
+  }
+}`,
+  curl: `# Deploy a ZIP with index.html via cURL
+curl -X POST https://airtifact.page/api/upload \\
+  -H "Authorization: Bearer YOUR_API_AUTH_TOKEN" \\
+  -F "file=@./build.zip"`,
+  js: `import fs from 'node:fs';
+
+const fileBuffer = fs.readFileSync('./build.zip');
+const formData = new FormData();
+formData.append('file', new Blob([fileBuffer]), 'build.zip');
+
+const res = await fetch('https://airtifact.page/api/upload', {
+  method: 'POST',
+  headers: { Authorization: 'Bearer YOUR_API_AUTH_TOKEN' },
+  body: formData,
+});
+const data = await res.json();
+console.log('Live preview:', data.shareUrl);`,
+  python: `import requests
+
+with open('build.zip', 'rb') as f:
+    res = requests.post(
+        'https://airtifact.page/api/upload',
+        headers={'Authorization': 'Bearer YOUR_API_AUTH_TOKEN'},
+        files={'file': ('build.zip', f, 'application/zip')}
+    )
+print("Live preview:", res.json()['shareUrl'])`,
+};
 
 export default function Page() {
   const [step, setStep] = useState<Step>('idle');
@@ -27,6 +70,7 @@ export default function Page() {
   const [uploadedProject, setUploadedProject] = useState<UploadResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<CopyField | null>(null);
+  const [activeSnippetTab, setActiveSnippetTab] = useState<SnippetTab>('mcp');
   const [maxUploadSizeBytes, setMaxUploadSizeBytes] = useState(DEFAULT_MAX_ANON_UPLOAD_SIZE_BYTES);
   const [starCount, setStarCount] = useState<number | null>(null);
   const [isDark, setIsDark] = useState(false);
@@ -191,7 +235,7 @@ export default function Page() {
           <User className="size-4" />
         </Link>
         <a
-          href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fstatic-website-uploader"
+          href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyhauxell%2Fairtifact"
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
@@ -200,7 +244,7 @@ export default function Page() {
           Deploy
         </a>
         <a
-          href="https://github.com/yhauxell/static-website-uploader"
+          href="https://github.com/yhauxell/airtifact"
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
@@ -272,6 +316,54 @@ export default function Page() {
               {error && (
                 <p className="text-sm text-destructive text-center">{error}</p>
               )}
+
+              {/* Developer & Agent Snippets */}
+              <div className="mt-8 pt-6 border-t border-border/60">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Deploy via API & Agents
+                  </span>
+                  <Link
+                    href="/dashboard"
+                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors"
+                  >
+                    Get API Key <ArrowRight className="size-3" />
+                  </Link>
+                </div>
+
+                <div className="rounded-xl border border-border bg-muted/40 p-1 text-left">
+                  {/* Tab Selector */}
+                  <div className="flex gap-1 border-b border-border/40 pb-1 mb-2 px-1">
+                    {(['mcp', 'curl', 'js', 'python'] as const).map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveSnippetTab(tab)}
+                        className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
+                          activeSnippetTab === tab
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        {tab === 'mcp' ? 'MCP Agent' : tab === 'curl' ? 'cURL' : tab === 'js' ? 'Node.js' : 'Python'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Code Display */}
+                  <div className="relative group p-2">
+                    <pre className="font-mono text-[11px] leading-relaxed text-foreground overflow-x-auto p-2 bg-background/60 rounded-lg border border-border/40">
+                      <code>{snippets[activeSnippetTab]}</code>
+                    </pre>
+                    <button
+                      onClick={() => copyToClipboard(snippets[activeSnippetTab], 'snippet')}
+                      className="absolute top-4 right-4 rounded-md border border-border bg-background p-1.5 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-foreground hover:bg-muted"
+                      title="Copy snippet"
+                    >
+                      {copiedField === 'snippet' ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
