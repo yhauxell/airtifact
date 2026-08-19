@@ -1,6 +1,6 @@
 # 🗺️ Product Roadmap
 
-This document outlines the strategic roadmap to establish **static-website-uploader** as the premier open-source, zero-config deployment layer and universal artifact hub for AI coding agents.
+This document outlines the strategic roadmap to establish **Airtifact** as the premier open-source, zero-config deployment layer and universal artifact hub for AI coding agents.
 
 ---
 
@@ -46,8 +46,8 @@ Focus: Expanding compatibility across developer ecosystems and agent runtimes.
 
 - [ ] **Remote MCP (HTTP / Server-Sent Events / Streamable Transport)**:
   - Provide a hosted/remote MCP endpoint option so users and agents can connect without requiring local Node runtime setup.
-- [ ] **Official CLI Tool (`@yhauxell/static-uploader-cli`)**:
-  - Fast standalone command-line tool for terminal-based workflows (e.g., `static-deploy ./dist --ttl 24h`).
+- [ ] **Official CLI Tool (`@airtifact/cli`)**:
+  - Fast standalone command-line tool for terminal-based workflows (e.g., `airtifact deploy ./dist --ttl 24h`).
 - [ ] **Framework Toolkits (LangChain, LlamaIndex, CrewAI)**:
   - Pre-built tool integrations for popular Python and TypeScript agent orchestration frameworks.
 - [ ] **Registry Listings**:
@@ -55,14 +55,21 @@ Focus: Expanding compatibility across developer ecosystems and agent runtimes.
 
 ---
 
-## 📍 Phase 4: Self-Hosting & Storage Modularity
+## 📍 Phase 4: Multi-Storage Backends & Self-Hosting
 
-Focus: Flexibility, portability, and easy self-hosting.
+Focus: Storage flexibility, vendor independence, and frictionless self-hosting.
 
-- [ ] **Multi-Storage Backend Adapters**:
-  - Modular storage interface supporting AWS S3, Cloudflare R2, MinIO, and local disk alongside Vercel Blob.
+- [ ] **Pluggable Storage Provider Architecture (`StorageAdapter` interface)**:
+  - Abstract the storage engine so developers can configure any backend via environment variables.
+- [ ] **First-Class Storage Provider Adapters**:
+  - **AWS S3 / S3-Compatible Storage**: Native AWS S3 support with custom endpoints, bucket policies, and region selection.
+  - **Cloudflare R2**: Zero-egress fee static storage integration.
+  - **MinIO**: High-performance local or self-hosted S3-compatible object storage.
+  - **Supabase Storage**: Direct integration with Supabase S3-compatible buckets.
+  - **Google Cloud Storage (GCS) & Azure Blob Storage**: Enterprise-standard object stores.
+  - **Local Filesystem Storage**: Zero external cloud dependency mode for purely local or offline agent environments.
 - [ ] **1-Click Self-Host Deployments**:
-  - Standalone Docker Compose, Railway, and Render deployment templates.
+  - Standalone Docker Compose, Railway, and Render deployment templates with built-in storage switching.
 - [ ] **Site Access Protection**:
   - Optional password protection or token-gated access for published preview URLs.
 
