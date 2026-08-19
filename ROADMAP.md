@@ -24,6 +24,10 @@ Focus: Streamlining agent interactions and eliminating friction during autonomou
   - Automated cleanup to reduce storage clutter from rapid agent explorations and scratchpad mockups.
 - [ ] **Site Revision & Updates (`update_site`)**:
   - Enable agents to update an existing `projectId` over iterative prompting loops rather than generating new URLs every turn.
+- [ ] **Agent-Aware Content Negotiation (`/` & `llms.txt`)**:
+  - **Human User-Agent**: Serves the visual drag-and-drop web UI with real-time preview iframes.
+  - **AI Agent / CLI User-Agent** (or `Accept: text/markdown` / `application/json`): Automatically serves a token-efficient, concise markdown spec containing MCP installation commands (`@airtifact/mcp`), API integration snippets (cURL/Node/Python), and endpoint schemas—bypassing unnecessary HTML/CSS/JS rendering.
+  - **Standardized `/.well-known/llms.txt` & `llms-full.txt`**: Native discovery routes for LLMs and crawler agents.
 
 ---
 
