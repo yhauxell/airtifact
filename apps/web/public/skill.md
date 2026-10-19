@@ -26,13 +26,15 @@ You are reading the operational manual for **airtifact**, the universal static w
 
 ## 1. Quickstart: The Agent Workflow
 
-When a user asks you to create a website, landing page, or UI preview:
-1. **Generate the files** in a local directory (e.g., `./my-project` or `./dist`).
-2. **Ensure an `index.html` file** exists at the root of the directory.
-3. **Deploy the directory**:
-   - **Via MCP**: Call `publish_site(directoryPath: "./my-project")`.
-   - **Via REST API**: Pack into a `.zip` in memory and `POST /api/upload`.
-4. **Present the result to the user**:
+When a user asks you to create a website, landing page, UI preview, or Markdown documentation:
+1. **For HTML websites**:
+   - Generate the files in a local directory (e.g., `./my-project` or `./dist`) with an `index.html` at the root.
+   - Call `publish_site(directoryPath: "./my-project")` (or ZIP and `POST /api/upload`).
+2. **For Markdown documents & multi-file docsets (Zero-Build)**:
+   - Publish a single `.md` file, a directory of `.md` files, or raw Markdown content directly—no VitePress/Docusaurus build step required.
+   - Call `publish_markdown(path: "./README.md")` or `publish_markdown(markdown: "# Hello World...", title: "My Spec")`.
+   - Rendered pages automatically include GitHub Flavored Markdown (GFM), syntax-highlighted code blocks with copy buttons, KaTeX math expressions, interactive Mermaid diagrams, dark/light mode, and sidebar navigation for multi-file docsets.
+3. **Present the result to the user**:
    - Share the returned **Live Preview URL** (`https://airtifact.page/<projectId>`).
    - Note the **Removal URL** or **Delete Token** if cleanup is desired later.
 
@@ -70,8 +72,9 @@ Add to your `mcp_config.json` or MCP settings:
 
 | Tool | Parameters | Description |
 | --- | --- | --- |
-| `publish_site` | `directoryPath` (string, required)<br>`serverUrl` (string, optional)<br>`authToken` (string, optional) | Packs the local directory into a zip archive and deploys it. Returns the live share URL and delete token. |
-| `list_sites` | `serverUrl` (string, optional)<br>`authToken` (string, optional) | Lists all published static websites and previews owned by the authenticated account. |
+| `publish_site` | `directoryPath` (string, required)<br>`serverUrl` (string, optional)<br>`authToken` (string, optional) | Packs the local directory (containing `index.html` or `.md` files) into a zip archive and deploys it. Returns the live share URL and delete token. |
+| `publish_markdown` | `path` (string, optional)<br>`markdown` (string, optional)<br>`title` (string, optional)<br>`serverUrl` (string, optional)<br>`authToken` (string, optional) | Zero-build Markdown publishing. Accepts a local `.md` file path, a directory of `.md` files, or raw `markdown` string content and renders it with GFM, KaTeX, Mermaid, and docset navigation. |
+| `list_sites` | `serverUrl` (string, optional)<br>`authToken` (string, optional) | Lists all published static websites, Markdown documents, and previews owned by the authenticated account. |
 
 ---
 
@@ -79,22 +82,35 @@ Add to your `mcp_config.json` or MCP settings:
 
 Deploy from scripts, CLI tools, or custom agents without MCP.
 
-### A. Deploy Website Archive (`POST /api/upload`)
+### A. Deploy Website Archive or Markdown Document (`POST /api/upload`)
 
 ```bash
+# Upload a static website or multi-file docset (.zip)
 curl -X POST https://airtifact.page/api/upload \
   -H "Authorization: Bearer $AIRTIFACT_AUTH_TOKEN" \
   -F "file=@./website.zip"
+
+# Upload a single Markdown file (.md) directly (zero-build)
+curl -X POST https://airtifact.page/api/upload \
+  -H "Authorization: Bearer $AIRTIFACT_AUTH_TOKEN" \
+  -F "file=@./README.md"
+
+# Or send raw Markdown string directly
+curl -X POST https://airtifact.page/api/upload \
+  -H "Authorization: Bearer $AIRTIFACT_AUTH_TOKEN" \
+  -F "markdown=# Architecture Spec" \
+  -F "title=Architecture Spec"
 ```
 
 **Response (200 OK):**
 ```json
 {
   "projectId": "044a4449ae784808785e1bb0ca4df372",
+  "projectType": "markdown",
   "shareUrl": "/044a4449ae784808785e1bb0ca4df372",
   "removeUrl": "/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a",
   "deleteToken": "aa166a",
-  "files": ["index.html", "style.css", "script.js"]
+  "files": ["README.md"]
 }
 ```
 

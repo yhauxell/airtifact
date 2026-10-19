@@ -35,6 +35,30 @@ function isPublishSiteToolArgs(args: any): args is PublishSiteToolArgs {
 }
 
 /**
+ * Interface for the publish_markdown tool input arguments
+ */
+interface PublishMarkdownToolArgs {
+  path?: string;
+  markdown?: string;
+  title?: string;
+  serverUrl?: string;
+  authToken?: string;
+}
+
+function isPublishMarkdownToolArgs(args: any): args is PublishMarkdownToolArgs {
+  return (
+    args &&
+    typeof args === "object" &&
+    (typeof args.path === "string" || typeof args.markdown === "string") &&
+    (args.path === undefined || typeof args.path === "string") &&
+    (args.markdown === undefined || typeof args.markdown === "string") &&
+    (args.title === undefined || typeof args.title === "string") &&
+    (args.serverUrl === undefined || typeof args.serverUrl === "string") &&
+    (args.authToken === undefined || typeof args.authToken === "string")
+  );
+}
+
+/**
  * Interface for the list_sites tool input arguments
  */
 interface ListSitesToolArgs {
@@ -56,6 +80,7 @@ function isListSitesToolArgs(args: any): args is ListSitesToolArgs {
  */
 async function addDirectoryToZip(zip: JSZip, rootPath: string, currentPath: string) {
   const entries = await fsPromises.readdir(currentPath, { withFileTypes: true });
+  let mdCount = 0;
   for (const entry of entries) {
     const fullPath = path.join(currentPath, entry.name);
     const relativePath = path.relative(rootPath, fullPath);
@@ -73,14 +98,18 @@ async function addDirectoryToZip(zip: JSZip, rootPath: string, currentPath: stri
     }
 
     if (entry.isDirectory()) {
-      await addDirectoryToZip(zip, rootPath, fullPath);
+      mdCount += await addDirectoryToZip(zip, rootPath, fullPath);
     } else if (entry.isFile()) {
       const fileContent = await fsPromises.readFile(fullPath);
       // Normalize path separators to forward slashes for ZIP compliance
       const zipPath = relativePath.split(path.sep).join("/");
       zip.file(zipPath, fileContent);
+      if (/\.(md|markdown)$/i.test(entry.name)) {
+        mdCount++;
+      }
     }
   }
+  return mdCount;
 }
 
 class MCPUploaderServer {
@@ -90,7 +119,7 @@ class MCPUploaderServer {
     this.server = new Server(
       {
         name: "@airtifact/mcp",
-        version: "1.0.0",
+        version: "1.1.0",
       },
       {
         capabilities: {
@@ -117,45 +146,80 @@ class MCPUploaderServer {
           {
             name: "publish_site",
             description:
-              "Publishes a local directory containing a static website (with index.html at root) to the web uploader service.",
+              "Publishes a local directory containing a static website (with index.html at root) or Markdown documentation folder to the web uploader service.",
             inputSchema: {
               type: "object",
               properties: {
                 directoryPath: {
                   type: "string",
                   description:
-                    "The absolute path to the local directory containing the static website files to upload.",
+                    "The absolute path to the local directory containing the static website or Markdown files to upload.",
                 },
                 serverUrl: {
                   type: "string",
                   description:
-                    "Static Website Server Url. Optional. Defaults to STATIC_WEBSITE_UPLOADER_URL environment variable or http://localhost:3000.",
+                    "Airtifact Server URL. Optional. Defaults to AIRTIFACT_URL environment variable or https://airtifact.page.",
                 },
                 authToken: {
                   type: "string",
                   description:
-                    "Auth Token for authorization. Optional. Defaults to STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+                    "Auth Token for authorization. Optional. Defaults to AIRTIFACT_AUTH_TOKEN environment variable.",
                 },
               },
               required: ["directoryPath"],
             },
           },
           {
+            name: "publish_markdown",
+            description:
+              "Zero-build Markdown publishing. Publishes a single Markdown (.md) file, a multi-file Markdown documentation directory, or raw Markdown content directly into a rendered web page with GFM, syntax highlighting, KaTeX math, Mermaid diagrams, and automatic sidebar navigation.",
+            inputSchema: {
+              type: "object",
+              properties: {
+                path: {
+                  type: "string",
+                  description:
+                    "The local path to a single .md file OR a directory of .md documentation files to publish. Required unless 'markdown' is provided.",
+                },
+                markdown: {
+                  type: "string",
+                  description:
+                    "Raw Markdown string content to publish directly without writing to disk. Required unless 'path' is provided.",
+                },
+                title: {
+                  type: "string",
+                  description:
+                    "Optional title for the published document or documentation collection.",
+                },
+                serverUrl: {
+                  type: "string",
+                  description:
+                    "Airtifact Server URL. Optional. Defaults to AIRTIFACT_URL environment variable or https://airtifact.page.",
+                },
+                authToken: {
+                  type: "string",
+                  description:
+                    "Auth Token for authorization. Optional. Defaults to AIRTIFACT_AUTH_TOKEN environment variable.",
+                },
+              },
+            },
+          },
+          {
             name: "list_sites",
             description:
-              "Lists all published static websites owned by the authenticated user.",
+              "Lists all published static websites and Markdown documents owned by the authenticated user.",
             inputSchema: {
               type: "object",
               properties: {
                 serverUrl: {
                   type: "string",
                   description:
-                    "Static Website Server Url. Optional. Defaults to STATIC_WEBSITE_UPLOADER_URL environment variable or http://localhost:3000.",
+                    "Airtifact Server URL. Optional. Defaults to AIRTIFACT_URL environment variable or https://airtifact.page.",
                 },
                 authToken: {
                   type: "string",
                   description:
-                    "Auth Token for authorization. Optional. Defaults to STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+                    "Auth Token for authorization. Optional. Defaults to AIRTIFACT_AUTH_TOKEN environment variable.",
                 },
               },
             },
@@ -170,6 +234,8 @@ class MCPUploaderServer {
 
       if (toolName === "publish_site" || toolName === "publish_static_site") {
         return this.handlePublishSite(request.params.arguments);
+      } else if (toolName === "publish_markdown") {
+        return this.handlePublishMarkdown(request.params.arguments);
       } else if (toolName === "list_sites" || toolName === "list_projects") {
         return this.handleListSites(request.params.arguments);
       } else {
@@ -179,6 +245,23 @@ class MCPUploaderServer {
         );
       }
     });
+  }
+
+  private resolveTargetCredentials(serverUrl?: string, authToken?: string) {
+    const targetServerUrl =
+      serverUrl ||
+      process.env.AIRTIFACT_URL ||
+      process.env.STATIC_WEBSITE_UPLOADER_URL ||
+      "https://airtifact.page";
+
+    const targetAuthToken =
+      authToken ||
+      process.env.AIRTIFACT_AUTH_TOKEN ||
+      process.env.AIRTIFACT_API_KEY ||
+      process.env.STATIC_WEBSITE_UPLOADER_AUTH_TOKEN ||
+      process.env.STATIC_WEBSITE_UPLOADER_API_KEY;
+
+    return { targetServerUrl, targetAuthToken };
   }
 
   private async handlePublishSite(args: any) {
@@ -219,53 +302,46 @@ class MCPUploaderServer {
         };
       }
 
-      // 2. Validate index.html exists
-      const indexHtmlPath = path.join(absoluteDir, "index.html");
-      if (!existsSync(indexHtmlPath)) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: The directory '${absoluteDir}' must contain an 'index.html' file at the root.`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      // 3. Resolve API URL and Key
-      const targetServerUrl =
-        serverUrl ||
-        process.env.AIRTIFACT_URL ||
-        process.env.STATIC_WEBSITE_UPLOADER_URL ||
-        "https://airtifact.page";
-
-      const targetAuthToken =
-        authToken ||
-        process.env.AIRTIFACT_AUTH_TOKEN ||
-        process.env.AIRTIFACT_API_KEY ||
-        process.env.STATIC_WEBSITE_UPLOADER_AUTH_TOKEN ||
-        process.env.STATIC_WEBSITE_UPLOADER_API_KEY;
+      // 2. Resolve API URL and Key
+      const { targetServerUrl, targetAuthToken } = this.resolveTargetCredentials(
+        serverUrl,
+        authToken
+      );
 
       if (!targetAuthToken) {
         return {
           content: [
             {
               type: "text",
-              text: "Error: Auth Token is required for programmatic uploads. Please provide the 'authToken' argument or set the STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+              text: "Error: Auth Token is required for programmatic uploads. Please provide the 'authToken' argument or set the AIRTIFACT_AUTH_TOKEN environment variable.",
             },
           ],
           isError: true,
         };
       }
 
-      // 4. Create the ZIP file in memory
+      // 3. Create the ZIP file in memory
       console.error(`Packing files from ${absoluteDir}...`);
       const zip = new JSZip();
-      await addDirectoryToZip(zip, absoluteDir, absoluteDir);
+      const mdCount = await addDirectoryToZip(zip, absoluteDir, absoluteDir);
+      const indexHtmlPath = path.join(absoluteDir, "index.html");
+      const hasIndexHtml = existsSync(indexHtmlPath);
+
+      if (!hasIndexHtml && mdCount === 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Error: The directory '${absoluteDir}' must contain an 'index.html' file or at least one Markdown (.md) file.`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
       const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
 
-      // 5. Send POST request to upload endpoint
+      // 4. Send POST request to upload endpoint
       const uploadEndpoint = `${targetServerUrl.replace(/\/+$/, "")}/api/upload`;
       console.error(`Uploading to ${uploadEndpoint}...`);
 
@@ -282,57 +358,7 @@ class MCPUploaderServer {
         body: formData,
       });
 
-      const responseText = await response.text();
-      let result: any;
-      try {
-        result = JSON.parse(responseText);
-      } catch (e) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Upload failed. Server responded with status ${response.status} but invalid JSON: ${responseText.substring(0, 500)}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      if (!response.ok) {
-        const errorMsg = result.error || responseText;
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Upload failed (${response.status}): ${errorMsg}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-
-      const shareUrlAbsolute = `${targetServerUrl.replace(/\/+$/, "")}${result.shareUrl}`;
-      const removeUrlAbsolute = `${targetServerUrl.replace(/\/+$/, "")}${result.removeUrl}`;
-
-      const markdownOutput = `
-### 🎉 Website Published Successfully!
-
-- **Project ID**: \`${result.projectId}\`
-- **Files Packed**: ${result.files.length} files
-- **Shareable Live URL**: [${shareUrlAbsolute}](${shareUrlAbsolute})
-- **Removal URL**: [${removeUrlAbsolute}](${removeUrlAbsolute})
-
-*Make sure to save the Removal URL or the delete token (\`${result.deleteToken}\`) if you want to delete this project later.*
-      `.trim();
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: markdownOutput,
-          },
-        ],
-      };
+      return this.formatUploadResponse(response, targetServerUrl);
     } catch (error: any) {
       console.error("Error publishing static site:", error);
       return {
@@ -347,6 +373,192 @@ class MCPUploaderServer {
     }
   }
 
+  private async handlePublishMarkdown(args: any) {
+    if (!isPublishMarkdownToolArgs(args)) {
+      throw new McpError(
+        ErrorCode.InvalidParams,
+        "Invalid arguments for publish_markdown. Provide either 'path' (to a .md file or directory) or 'markdown' (raw Markdown string)."
+      );
+    }
+
+    try {
+      const { path: inputPath, markdown, title, serverUrl, authToken } = args;
+      const { targetServerUrl, targetAuthToken } = this.resolveTargetCredentials(
+        serverUrl,
+        authToken
+      );
+
+      if (!targetAuthToken) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Error: Auth Token is required for programmatic uploads. Please provide the 'authToken' argument or set the AIRTIFACT_AUTH_TOKEN environment variable.",
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      const formData = new FormData();
+      if (title) {
+        formData.append("title", title);
+      }
+
+      if (markdown && !inputPath) {
+        formData.append("markdown", markdown);
+        formData.append("fileName", title ? `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md` : "index.md");
+      } else if (inputPath) {
+        const absoluteTarget = path.resolve(inputPath);
+        if (!existsSync(absoluteTarget)) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error: The path '${absoluteTarget}' does not exist.`,
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        const stats = statSync(absoluteTarget);
+        if (stats.isFile()) {
+          if (!/\.(md|markdown)$/i.test(absoluteTarget)) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Error: The file '${absoluteTarget}' must be a Markdown (.md or .markdown) file.`,
+                },
+              ],
+              isError: true,
+            };
+          }
+          const fileContent = await fsPromises.readFile(absoluteTarget);
+          const fileName = path.basename(absoluteTarget);
+          const blob = new Blob([fileContent], { type: "text/markdown" });
+          formData.append("file", blob, fileName);
+        } else if (stats.isDirectory()) {
+          const zip = new JSZip();
+          const mdCount = await addDirectoryToZip(zip, absoluteTarget, absoluteTarget);
+          if (mdCount === 0) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: `Error: The directory '${absoluteTarget}' does not contain any Markdown (.md) files.`,
+                },
+              ],
+              isError: true,
+            };
+          }
+          const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+          const zipName = `${path.basename(absoluteTarget) || "docs"}.zip`;
+          const blob = new Blob([zipBuffer], { type: "application/zip" });
+          formData.append("file", blob, zipName);
+        } else {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error: Unsupported path type at '${absoluteTarget}'.`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      }
+
+      const uploadEndpoint = `${targetServerUrl.replace(/\/+$/, "")}/api/upload`;
+      console.error(`Publishing Markdown to ${uploadEndpoint}...`);
+
+      const response = await fetch(uploadEndpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${targetAuthToken}`,
+        },
+        body: formData,
+      });
+
+      return this.formatUploadResponse(response, targetServerUrl, true);
+    } catch (error: any) {
+      console.error("Error publishing markdown:", error);
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Internal MCP Server Error: ${error.message || String(error)}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+
+  private async formatUploadResponse(
+    response: Response,
+    targetServerUrl: string,
+    isMarkdownTool = false
+  ) {
+    const responseText = await response.text();
+    let result: any;
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Upload failed. Server responded with status ${response.status} but invalid JSON: ${responseText.substring(0, 500)}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    if (!response.ok) {
+      const errorMsg = result.error || responseText;
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Upload failed (${response.status}): ${errorMsg}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
+    const shareUrlAbsolute = `${targetServerUrl.replace(/\/+$/, "")}${result.shareUrl}`;
+    const removeUrlAbsolute = `${targetServerUrl.replace(/\/+$/, "")}${result.removeUrl}`;
+    const heading =
+      isMarkdownTool || result.projectType === "markdown"
+        ? "### 📄 Markdown Published Successfully!"
+        : "### 🎉 Website Published Successfully!";
+
+    const markdownOutput = `
+${heading}
+
+- **Project ID**: \`${result.projectId}\`
+- **Project Type**: \`${result.projectType || "html"}\`
+- **Files Packed**: ${result.files.length} file${result.files.length === 1 ? "" : "s"}
+- **Shareable Live URL**: [${shareUrlAbsolute}](${shareUrlAbsolute})
+- **Removal URL**: [${removeUrlAbsolute}](${removeUrlAbsolute})
+
+*Make sure to save the Removal URL or the delete token (\`${result.deleteToken}\`) if you want to delete this project later.*
+    `.trim();
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: markdownOutput,
+        },
+      ],
+    };
+  }
+
   private async handleListSites(args: any) {
     if (!isListSitesToolArgs(args)) {
       throw new McpError(
@@ -357,26 +569,17 @@ class MCPUploaderServer {
 
     try {
       const { serverUrl, authToken } = args || {};
-
-      const targetServerUrl =
-        serverUrl ||
-        process.env.AIRTIFACT_URL ||
-        process.env.STATIC_WEBSITE_UPLOADER_URL ||
-        "https://airtifact.page";
-
-      const targetAuthToken =
-        authToken ||
-        process.env.AIRTIFACT_AUTH_TOKEN ||
-        process.env.AIRTIFACT_API_KEY ||
-        process.env.STATIC_WEBSITE_UPLOADER_AUTH_TOKEN ||
-        process.env.STATIC_WEBSITE_UPLOADER_API_KEY;
+      const { targetServerUrl, targetAuthToken } = this.resolveTargetCredentials(
+        serverUrl,
+        authToken
+      );
 
       if (!targetAuthToken) {
         return {
           content: [
             {
               type: "text",
-              text: "Error: Auth Token is required to list sites. Please provide the 'authToken' argument or set the STATIC_WEBSITE_UPLOADER_AUTH_TOKEN environment variable.",
+              text: "Error: Auth Token is required to list sites. Please provide the 'authToken' argument or set the AIRTIFACT_AUTH_TOKEN environment variable.",
             },
           ],
           isError: true,
@@ -397,7 +600,7 @@ class MCPUploaderServer {
       let result: any;
       try {
         result = JSON.parse(responseText);
-      } catch (e) {
+      } catch {
         return {
           content: [
             {
@@ -440,7 +643,8 @@ class MCPUploaderServer {
         const dateStr = proj.uploadDate
           ? new Date(proj.uploadDate).toLocaleString()
           : "Unknown date";
-        markdownOutput += `- **${proj.fileName || "Site"}** (\`${proj.projectId}\`)\n`;
+        const badge = proj.projectType === "markdown" ? " [Markdown]" : "";
+        markdownOutput += `- **${proj.title || proj.fileName || "Site"}**${badge} (\`${proj.projectId}\`)\n`;
         markdownOutput += `  - **Live URL**: [${liveUrl}](${liveUrl})\n`;
         markdownOutput += `  - **Files**: ${proj.fileCount || (proj.files ? proj.files.length : "N/A")} files\n`;
         markdownOutput += `  - **Uploaded**: ${dateStr}\n\n`;

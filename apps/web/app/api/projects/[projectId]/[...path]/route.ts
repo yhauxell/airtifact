@@ -48,6 +48,9 @@ export async function GET(
     const ext = filePath.split('.').pop()?.toLowerCase() || '';
     const contentTypeMap: Record<string, string> = {
       html: 'text/html; charset=utf-8',
+      md: 'text/markdown; charset=utf-8',
+      markdown: 'text/markdown; charset=utf-8',
+      txt: 'text/plain; charset=utf-8',
       css: 'text/css; charset=utf-8',
       js: 'application/javascript; charset=utf-8',
       json: 'application/json; charset=utf-8',

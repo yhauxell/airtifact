@@ -10,10 +10,10 @@ export async function GET(request: NextRequest) {
     transport: 'stdio',
     package: '@airtifact/mcp',
     endpoint: `${origin}/api/mcp`,
-    instructions: `airtifact — universal static website & artifact preview hub for AI coding agents.
-When you build or modify web artifacts, landing pages, interactive apps, or HTML mockups:
-1. Ensure the directory contains an 'index.html' file at its root.
-2. Use the 'publish_site' MCP tool (or POST /api/upload) to upload and generate a live preview link.
+    instructions: `airtifact — universal static website, Markdown docset & artifact preview hub for AI coding agents.
+When you build or modify web artifacts, landing pages, interactive apps, HTML mockups, or Markdown documentation:
+1. For HTML sites: Ensure the directory contains an 'index.html' file at its root and call 'publish_site'.
+2. For Markdown docs: Call 'publish_markdown' with a single '.md' file path, a directory of '.md' files, or raw Markdown content (or POST /api/upload).
 3. Share the resulting live URL with the user.
 4. Use 'list_sites' to view all active deployed artifacts and their live links.
 Full agent guidelines: ${origin}/skill.md`,
@@ -21,15 +21,15 @@ Full agent guidelines: ${origin}/skill.md`,
     tools: [
       {
         name: 'publish_site',
-        title: 'Publish static website',
+        title: 'Publish static website or docset directory',
         description:
-          'Publishes a local directory containing a static website (with index.html at root) to airtifact to get a live preview URL.',
+          'Publishes a local directory containing a static website (with index.html at root) or Markdown documentation folder to airtifact to get a live preview URL.',
         requiresAuth: true,
         parameters: {
           directoryPath: {
             type: 'string',
             description:
-              'The absolute path to the local directory containing the static website files to upload.',
+              'The absolute path to the local directory containing the static website or Markdown files to upload.',
             required: true,
           },
           serverUrl: {
@@ -46,10 +46,47 @@ Full agent guidelines: ${origin}/skill.md`,
         },
       },
       {
-        name: 'list_sites',
-        title: 'List published websites',
+        name: 'publish_markdown',
+        title: 'Publish Markdown document or docset (zero-build)',
         description:
-          'Lists all published static websites and preview links owned by the authenticated user.',
+          'Zero-build Markdown publishing. Publishes a single .md file, a directory of .md docs, or raw Markdown text directly into a styled web page with GFM, syntax highlighting, KaTeX math, Mermaid diagrams, and automatic sidebar navigation.',
+        requiresAuth: true,
+        parameters: {
+          path: {
+            type: 'string',
+            description:
+              'Local path to a single .md file OR a folder of Markdown files. Required unless markdown is provided.',
+            required: false,
+          },
+          markdown: {
+            type: 'string',
+            description:
+              'Raw Markdown string content to publish directly without writing to disk. Required unless path is provided.',
+            required: false,
+          },
+          title: {
+            type: 'string',
+            description: 'Optional title for the published document or docset.',
+            required: false,
+          },
+          serverUrl: {
+            type: 'string',
+            description: `Target airtifact server URL (defaults to ${origin}).`,
+            required: false,
+          },
+          authToken: {
+            type: 'string',
+            description:
+              'API Auth Token for authorization (defaults to AIRTIFACT_AUTH_TOKEN environment variable).',
+            required: false,
+          },
+        },
+      },
+      {
+        name: 'list_sites',
+        title: 'List published websites and documents',
+        description:
+          'Lists all published static websites, Markdown documents, and preview links owned by the authenticated user.',
         requiresAuth: true,
         parameters: {
           serverUrl: {
