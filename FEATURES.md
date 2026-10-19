@@ -14,12 +14,15 @@ This document outlines the current capabilities and feature set of **Airtifact**
   - Out-of-the-box support for AI agents (Cursor, Claude Code, Antigravity, Windsurf, Claude Desktop, etc.).
   - Runs locally via `npx @airtifact/mcp` over standard JSON-RPC (`stdio`).
 - **`publish_site` Tool**:
-  - Accepts an absolute local directory path containing static files (with an `index.html` at root).
+  - Accepts an absolute local directory path containing static files (with an `index.html` at root) or Markdown documentation files.
   - Automatically filters out bulky/unnecessary files (`.git`, `node_modules`, `.next`, `dist`, `.DS_Store`, hidden files).
   - In-memory ZIP compilation and streaming upload to backend.
   - Returns formatted markdown with the shareable live URL and removal link directly to agent context.
+- **`publish_markdown` Tool**:
+  - Zero-build Markdown publishing for single `.md` files, multi-file Markdown docset folders, or raw Markdown strings.
+  - Server-side Markdown rendering pipeline with GitHub Flavored Markdown (GFM), syntax-highlighted code blocks with copy buttons, KaTeX math expressions, interactive Mermaid diagrams, and automatic docset sidebar navigation.
 - **`list_sites` Tool**:
-  - Allows agents to query and inspect all static websites published under the user's account with live links and upload timestamps.
+  - Allows agents to query and inspect all static websites and Markdown documents published under the user's account with live links and upload timestamps.
 - **Configurable Connection Options**:
   - Supports environment variables (`AIRTIFACT_URL`, `AIRTIFACT_AUTH_TOKEN`) or explicit per-tool-call parameters.
 
@@ -29,7 +32,10 @@ This document outlines the current capabilities and feature set of **Airtifact**
 
 - **Modern Interactive Drag & Drop**:
   - Clean web interface built with Next.js 16 (App Router), Tailwind CSS, and shadcn/ui components.
-  - Real-time client-side ZIP file inspection and validation before upload.
+  - Real-time client-side ZIP and Markdown (`.md`) file inspection and validation before upload.
+- **Native Markdown Engine & Multi-Docset Mode**:
+  - Zero-build rendering of `.md` files and multi-document Markdown collections.
+  - Automatic Table of Contents (TOC), sidebar navigation with search filter, nested route resolution (`/docs/getting-started.md` -> `/getting-started`), and dark/light theme toggle.
 - **Instant Deployment**:
   - Instant extraction and hosting on Vercel Blob storage.
   - Provides a permanent shareable URL (`https://<domain>/<projectId>`) and instant preview.

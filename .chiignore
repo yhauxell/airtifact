@@ -1,0 +1,13 @@
+# .chiignore — what Archis does not index. .gitignore syntax.
+#
+# Your own rules go OUTSIDE the managed block: Archis never touches them.
+# Inside the block, Archis appends what it detects as it indexes. Delete an entry from
+# inside and Archis takes you at your word: that tree gets indexed, and Archis says so
+# once instead of putting the line back.
+# To switch a rule off without deleting it, negate it with `!`, e.g. `!dist/`.
+
+# >>> chi: detected <<<
+dist/
+node_modules/
+data/
+# <<< chi: end detected >>>

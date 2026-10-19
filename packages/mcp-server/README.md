@@ -5,8 +5,9 @@ An official Model Context Protocol (MCP) server that enables AI coding assistant
 ## Features
 
 - **Self-Discovery & Guidelines**: Agents can query `/api/mcp` for machine-readable manifests and read `/skill.md` for operational instructions.
-- **`publish_site` Tool**: Automatically packs a local folder (must contain `index.html`), zips it in memory, and deploys it programmatically to your uploader backend.
-- **`list_sites` Tool**: Lists all static websites published by the authenticated user along with file counts, upload dates, and live URLs.
+- **`publish_site` Tool**: Automatically packs a local folder (containing `index.html` or `.md` files), zips it in memory, and deploys it programmatically to your uploader backend.
+- **`publish_markdown` Tool**: Zero-build Markdown publishing. Accepts a single `.md` file, a multi-file Markdown documentation folder, or raw Markdown content and renders it server-side with GitHub Flavored Markdown (GFM), syntax highlighting, KaTeX math, Mermaid diagrams, and automatic docset sidebar navigation.
+- **`list_sites` Tool**: Lists all static websites and Markdown documents published by the authenticated user along with file counts, upload dates, and live URLs.
 - **Smart Ignore Rules**: Excludes unnecessary folders (`.git`, `node_modules`, `.next`, `dist`) and hidden OS files (`.DS_Store`) during compression.
 - **Rich Markdown Output**: Returns shareable live URLs and secret project removal URLs directly formatted for the AI agent context.
 
@@ -44,11 +45,11 @@ To register this MCP server in your agentic workspace, add the configuration bel
 
 ### 1. `publish_site`
 
-Publishes a local directory containing a static website.
+Publishes a local directory containing a static website or Markdown docset.
 
 #### Input Schema / Arguments
 
-- `directoryPath` (string, **required**): Absolute path to the local directory containing the static website files (must contain `index.html` at the root).
+- `directoryPath` (string, **required**): Absolute path to the local directory containing the static website files (`index.html` or `.md` files).
 - `serverUrl` (string, *optional*): Target server URL (e.g. `https://airtifact.page` or `http://localhost:3000`). Overrides the `AIRTIFACT_URL` environment variable.
 - `authToken` (string, *optional*): Auth token for authorization (`sk_username.version.signature`). Overrides the `AIRTIFACT_AUTH_TOKEN` environment variable.
 
@@ -59,7 +60,7 @@ Publishes a local directory containing a static website.
   "content": [
     {
       "type": "text",
-      "text": "### 🎉 Website Published Successfully!\n\n- **Project ID**: `044a4449ae784808785e1bb0ca4df372`\n- **Files Packed**: 3 files\n- **Shareable Live URL**: [https://airtifact.page/044a4449ae784808785e1bb0ca4df372](https://airtifact.page/044a4449ae784808785e1bb0ca4df372)\n- **Removal URL**: [https://airtifact.page/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a](https://airtifact.page/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a)\n\n*Make sure to save the Removal URL or the delete token (`aa166a`) if you want to delete this project later.*"
+      "text": "### 🎉 Website Published Successfully!\n\n- **Project ID**: `044a4449ae784808785e1bb0ca4df372`\n- **Project Type**: `html`\n- **Files Packed**: 3 files\n- **Shareable Live URL**: [https://airtifact.page/044a4449ae784808785e1bb0ca4df372](https://airtifact.page/044a4449ae784808785e1bb0ca4df372)\n- **Removal URL**: [https://airtifact.page/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a](https://airtifact.page/project/044a4449ae784808785e1bb0ca4df372/r?t=aa166a)\n\n*Make sure to save the Removal URL or the delete token (`aa166a`) if you want to delete this project later.*"
     }
   ]
 }
@@ -67,7 +68,21 @@ Publishes a local directory containing a static website.
 
 ---
 
-### 2. `list_sites`
+### 2. `publish_markdown`
+
+Publishes a single Markdown (`.md`) file, a directory of Markdown docs, or raw Markdown content with zero build step.
+
+#### Input Schema / Arguments
+
+- `path` (string, *optional*): Local path to a single `.md` file OR a directory of `.md` documentation files. Required unless `markdown` is provided.
+- `markdown` (string, *optional*): Raw Markdown string content to publish directly without writing to disk. Required unless `path` is provided.
+- `title` (string, *optional*): Optional title for the published document or documentation collection.
+- `serverUrl` (string, *optional*): Target server URL. Overrides `AIRTIFACT_URL`.
+- `authToken` (string, *optional*): Auth token for authorization. Overrides `AIRTIFACT_AUTH_TOKEN`.
+
+---
+
+### 3. `list_sites`
 
 Lists all published static websites owned by the authenticated user.
 
