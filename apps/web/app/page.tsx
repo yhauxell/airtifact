@@ -39,15 +39,15 @@ curl -s https://airtifact.page/skill.md
 
 # MCP server discovery & tool manifest:
 curl -s https://airtifact.page/api/mcp`,
-  curl: `# Deploy a ZIP with index.html via cURL
+  curl: `# Deploy a ZIP or single .md file via cURL
 curl -X POST https://airtifact.page/api/upload \\
   -H "Authorization: Bearer YOUR_API_AUTH_TOKEN" \\
-  -F "file=@./build.zip"`,
+  -F "file=@./README.md"`,
   js: `import fs from 'node:fs';
 
-const fileBuffer = fs.readFileSync('./build.zip');
+const fileBuffer = fs.readFileSync('./README.md');
 const formData = new FormData();
-formData.append('file', new Blob([fileBuffer]), 'build.zip');
+formData.append('file', new Blob([fileBuffer]), 'README.md');
 
 const res = await fetch('https://airtifact.page/api/upload', {
   method: 'POST',
@@ -58,11 +58,11 @@ const data = await res.json();
 console.log('Live preview:', data.shareUrl);`,
   python: `import requests
 
-with open('build.zip', 'rb') as f:
+with open('README.md', 'rb') as f:
     res = requests.post(
         'https://airtifact.page/api/upload',
         headers={'Authorization': 'Bearer YOUR_API_AUTH_TOKEN'},
-        files={'file': ('build.zip', f, 'application/zip')}
+        files={'file': ('README.md', f, 'text/markdown')}
     )
 print("Live preview:", res.json()['shareUrl'])`,
 };
@@ -156,8 +156,9 @@ export default function Page() {
   };
 
   const handleFile = (file: File) => {
-    if (!file.name.toLowerCase().endsWith('.zip')) {
-      setError('Please upload a ZIP file');
+    const lowerName = file.name.toLowerCase();
+    if (!lowerName.endsWith('.zip') && !lowerName.endsWith('.md') && !lowerName.endsWith('.markdown')) {
+      setError('Please upload a ZIP archive (.zip) or Markdown file (.md)');
       return;
     }
     if (file.size > maxUploadSizeBytes) {
@@ -288,10 +289,10 @@ export default function Page() {
             <div className="space-y-6 animate-in fade-in duration-200">
               <div className="space-y-1 text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground">
-                  Drop your site.
+                  Drop your site or docs.
                 </h1>
                 <p className="text-muted-foreground">
-                  Upload a ZIP, get a shareable link.
+                  Upload a ZIP or Markdown file, get a shareable link.
                 </p>
               </div>
 
@@ -308,7 +309,7 @@ export default function Page() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".zip"
+                  accept=".zip,.md,.markdown"
                   onChange={handleFileSelect}
                   className="absolute inset-0 cursor-pointer opacity-0"
                 />
@@ -325,7 +326,7 @@ export default function Page() {
               </div>
 
               <p className="text-xs text-muted-foreground text-center">
-                ZIP · index.html required · {maxUploadSizeMB}MB max
+                ZIP (index.html or .md docset) · Single .md file · {maxUploadSizeMB}MB max
               </p>
 
               {error && (

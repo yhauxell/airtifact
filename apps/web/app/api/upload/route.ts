@@ -102,72 +102,117 @@ export async function POST(request: NextRequest) {
     const maxSizeMB = maxSize / (1024 * 1024);
 
     const formData = await request.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get('file') as File | null;
+    const rawMarkdown = formData.get('markdown') as string | null;
+    const customTitle = (formData.get('title') as string | null)?.trim() || undefined;
+    const customFileName = (formData.get('fileName') as string | null)?.trim() || undefined;
 
-    if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
-    }
-
-    if (!file.name.toLowerCase().endsWith('.zip')) {
-      return NextResponse.json(
-        { error: 'File must be a ZIP archive' },
-        { status: 400 }
-      );
-    }
-
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: `File size must be less than ${maxSizeMB}MB` },
-        { status: 400 }
-      );
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
     const projectId = generateProjectId();
     const deleteToken = generateDeleteToken();
     const deleteTokenHash = hashDeleteToken(deleteToken);
-    const jszip = new JSZip();
-    const zip = await jszip.loadAsync(buffer);
-
     const uploadedFiles: string[] = [];
     let hasIndexHtml = false;
+    let hasMarkdown = false;
+    let recordedFileName = customFileName || 'document.md';
 
-    for (const [filePath, file] of Object.entries(zip.files)) {
-      const normalizedPath = normalizeZipPath(filePath);
-
-      if (!normalizedPath || shouldSkipNormalizedZipPath(normalizedPath)) {
-        continue;
+    if (rawMarkdown && typeof rawMarkdown === 'string') {
+      const bufferObject = Buffer.from(rawMarkdown, 'utf-8');
+      if (bufferObject.byteLength > maxSize) {
+        return NextResponse.json(
+          { error: `Content size must be less than ${maxSizeMB}MB` },
+          { status: 400 }
+        );
       }
 
-      if (file.dir) continue;
+      const targetName =
+        customFileName && /\.(md|markdown)$/i.test(customFileName)
+          ? normalizeZipPath(customFileName) || 'index.md'
+          : 'index.md';
 
-      if (normalizedPath.toLowerCase().endsWith('index.html')) {
-        hasIndexHtml = true;
+      await getStorageAdapter().put(`projects/${projectId}/${targetName}`, bufferObject);
+      uploadedFiles.push(targetName);
+      hasMarkdown = true;
+      recordedFileName = targetName;
+    } else if (file) {
+      if (file.size > maxSize) {
+        return NextResponse.json(
+          { error: `File size must be less than ${maxSizeMB}MB` },
+          { status: 400 }
+        );
       }
 
-      const fileBuffer = await file.async('arraybuffer');
-      const bufferObject = Buffer.from(fileBuffer);
+      const lowerFileName = file.name.toLowerCase();
+      const isZip = lowerFileName.endsWith('.zip');
+      const isMd = lowerFileName.endsWith('.md') || lowerFileName.endsWith('.markdown');
 
-      const blobPath = `projects/${projectId}/${normalizedPath}`;
-      await getStorageAdapter().put(blobPath, bufferObject);
+      if (!isZip && !isMd) {
+        return NextResponse.json(
+          { error: 'File must be a ZIP archive (.zip) or Markdown document (.md)' },
+          { status: 400 }
+        );
+      }
 
-      uploadedFiles.push(normalizedPath);
-    }
+      const buffer = Buffer.from(await file.arrayBuffer());
+      recordedFileName = file.name;
 
-    if (!hasIndexHtml) {
+      if (isMd) {
+        const sanitizedName = normalizeZipPath(file.name) || 'index.md';
+        const blobPath = `projects/${projectId}/${sanitizedName}`;
+        await getStorageAdapter().put(blobPath, buffer);
+        uploadedFiles.push(sanitizedName);
+        hasMarkdown = true;
+      } else {
+        const jszip = new JSZip();
+        const zip = await jszip.loadAsync(buffer);
+
+        for (const [filePath, zipEntry] of Object.entries(zip.files)) {
+          const normalizedPath = normalizeZipPath(filePath);
+
+          if (!normalizedPath || shouldSkipNormalizedZipPath(normalizedPath)) {
+            continue;
+          }
+
+          if (zipEntry.dir) continue;
+
+          const lowerNormalized = normalizedPath.toLowerCase();
+          if (lowerNormalized.endsWith('index.html')) {
+            hasIndexHtml = true;
+          }
+          if (lowerNormalized.endsWith('.md') || lowerNormalized.endsWith('.markdown')) {
+            hasMarkdown = true;
+          }
+
+          const fileBuffer = await zipEntry.async('arraybuffer');
+          const bufferObject = Buffer.from(fileBuffer);
+
+          const blobPath = `projects/${projectId}/${normalizedPath}`;
+          await getStorageAdapter().put(blobPath, bufferObject);
+
+          uploadedFiles.push(normalizedPath);
+        }
+      }
+    } else {
       return NextResponse.json(
-        { error: 'ZIP must contain an index.html file' },
+        { error: 'No file or markdown content provided' },
         { status: 400 }
       );
     }
 
+    if (!hasIndexHtml && !hasMarkdown) {
+      return NextResponse.json(
+        { error: 'Upload must contain an index.html file or at least one Markdown (.md) file' },
+        { status: 400 }
+      );
+    }
+
+    const projectType = hasIndexHtml ? 'html' : 'markdown';
+
     const metadata: any = {
       projectId,
+      projectType,
+      title: customTitle,
       uploadDate: new Date().toISOString(),
-      fileName: file.name,
+      fileName: recordedFileName,
       fileCount: uploadedFiles.length,
       files: uploadedFiles.sort(),
       deleteTokenHash,
@@ -184,6 +229,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       projectId,
+      projectType,
       shareUrl: `/${projectId}`,
       removeUrl: getProjectRemovalUrl(projectId, deleteToken),
       deleteToken,
