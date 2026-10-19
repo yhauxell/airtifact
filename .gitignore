@@ -18,3 +18,4 @@ node_modules
 
 # Local filesystem storage
 data/
+.pnpm-store/
